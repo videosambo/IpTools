@@ -1,57 +1,43 @@
 package fi.videosambo.iptools;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.JTabbedPane;
+import java.awt.Font;
 import java.awt.GridLayout;
-import javax.swing.JRadioButton;
-import javax.swing.JTextArea;
-import javax.swing.BoxLayout;
-import java.awt.FlowLayout;
-import javax.swing.JLayeredPane;
-import javax.swing.JInternalFrame;
-import javax.swing.JScrollPane;
+import java.awt.Label;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.LineBorder;
-import java.awt.Color;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.MatteBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.UIManager;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import java.awt.Component;
-import javax.swing.Box;
-import javax.swing.JSplitPane;
-import java.awt.CardLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.JEditorPane;
-import javax.swing.JSeparator;
 import javax.swing.JButton;
-import javax.swing.JProgressBar;
-import javax.swing.JSpinner;
-import javax.swing.JSlider;
-import javax.swing.SwingConstants;
-import javax.swing.JMenuBar;
-import javax.swing.JToolBar;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.Font;
-import javax.swing.JTextPane;
-import java.awt.Label;
-import java.awt.TextArea;
-import javax.swing.JTree;
+import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+
+import fi.videosambo.iptools.whois.GetXMLData;
 
 public class GUI extends JFrame {
 
@@ -61,6 +47,13 @@ public class GUI extends JFrame {
 	private JTextField booterPortField;
 	private JTextField whoisSearchField;
 
+	private GetXMLData xmldata = new GetXMLData();
+	private JTextField dnsSearchField;
+	private JTextField dtipDomainField;
+	private JTextField dtipIpField;
+	private JTextField iptdIpField;
+	private JTextField iptdDomainFIeld;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -328,6 +321,7 @@ public class GUI extends JFrame {
 		whoisEditorPanel.add(scrollPane_1);
 		
 		JEditorPane whoisEditor = new JEditorPane();
+		whoisEditor.setFont(new Font("Monospaced", Font.PLAIN, 25));
 		scrollPane_1.setViewportView(whoisEditor);
 		
 		whoisSearchField = new JTextField();
@@ -344,6 +338,16 @@ public class GUI extends JFrame {
 					.addComponent(whoisSearchButton, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
 					.addGap(6))
 		);
+		
+		whoisSearchButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {			
+				whoisEditor.setText(xmldata.getXMLContentAsString(whoisSearchField.getText()));
+			}
+		});
+		
+		
 		gl_whoisSearchPanel.setVerticalGroup(
 			gl_whoisSearchPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_whoisSearchPanel.createSequentialGroup()
@@ -360,6 +364,164 @@ public class GUI extends JFrame {
 		
 		JPanel dnslookupPanel = new JPanel();
 		tabbedPane.addTab("DNS Lookup", null, dnslookupPanel, null);
+		
+		JLayeredPane dnslookupSearchPanel = new JLayeredPane();
+		dnslookupSearchPanel.setToolTipText("You can search ip's and domain names");
+		dnslookupSearchPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Search DNS Records", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		
+		dnsSearchField = new JTextField();
+		dnsSearchField.setColumns(10);
+		
+		JButton dnsSearchButton = new JButton("Search");
+		GroupLayout gl_dnslookupSearchPanel = new GroupLayout(dnslookupSearchPanel);
+		gl_dnslookupSearchPanel.setHorizontalGroup(
+			gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
+				.addGap(0, 619, Short.MAX_VALUE)
+				.addGroup(gl_dnslookupSearchPanel.createSequentialGroup()
+					.addGap(12)
+					.addComponent(dnsSearchField, GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+					.addGap(12)
+					.addComponent(dnsSearchButton, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
+					.addGap(6))
+		);
+		gl_dnslookupSearchPanel.setVerticalGroup(
+			gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
+				.addGap(0, 66, Short.MAX_VALUE)
+				.addGroup(gl_dnslookupSearchPanel.createSequentialGroup()
+					.addGap(7)
+					.addGroup(gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
+						.addComponent(dnsSearchField, GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
+						.addGroup(gl_dnslookupSearchPanel.createSequentialGroup()
+							.addComponent(dnsSearchButton, GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
+							.addGap(1)))
+					.addGap(6))
+		);
+		dnslookupSearchPanel.setLayout(gl_dnslookupSearchPanel);
+		
+		JLayeredPane dnsEditorPanel = new JLayeredPane();
+		dnsEditorPanel.setBorder(new TitledBorder(null, "Editor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		dnsEditorPanel.setLayout(new GridLayout(1, 0, 0, 0));
+		GroupLayout gl_dnslookupPanel = new GroupLayout(dnslookupPanel);
+		gl_dnslookupPanel.setHorizontalGroup(
+			gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_dnslookupPanel.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
+						.addComponent(dnslookupSearchPanel, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE)
+						.addComponent(dnsEditorPanel, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE))
+					.addContainerGap())
+		);
+		gl_dnslookupPanel.setVerticalGroup(
+			gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_dnslookupPanel.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(dnslookupSearchPanel, GroupLayout.PREFERRED_SIZE, 66, GroupLayout.PREFERRED_SIZE)
+					.addGap(7)
+					.addComponent(dnsEditorPanel, GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		
+		JScrollPane scrollPane_3 = new JScrollPane();
+		dnsEditorPanel.add(scrollPane_3);
+		
+		JEditorPane dnsEditor = new JEditorPane();
+		scrollPane_3.setViewportView(dnsEditor);
+		dnslookupPanel.setLayout(gl_dnslookupPanel);
+		
+		JPanel panel_1 = new JPanel();
+		tabbedPane.addTab("Domain to IP", null, panel_1, null);
+		
+		JLayeredPane layeredPane_1 = new JLayeredPane();
+		layeredPane_1.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Domain to IP converter", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		
+		JLayeredPane layeredPane_2 = new JLayeredPane();
+		layeredPane_2.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "IP to Domain coverter", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		
+		iptdIpField = new JTextField();
+		iptdIpField.setColumns(10);
+		
+		JButton iptdButton = new JButton("->");
+		
+		iptdDomainFIeld = new JTextField();
+		iptdDomainFIeld.setColumns(10);
+		GroupLayout gl_layeredPane_2 = new GroupLayout(layeredPane_2);
+		gl_layeredPane_2.setHorizontalGroup(
+			gl_layeredPane_2.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_layeredPane_2.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(iptdIpField, GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(iptdButton, GroupLayout.DEFAULT_SIZE, 94, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(iptdDomainFIeld, GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		gl_layeredPane_2.setVerticalGroup(
+			gl_layeredPane_2.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING, gl_layeredPane_2.createSequentialGroup()
+					.addGap(25)
+					.addGroup(gl_layeredPane_2.createParallelGroup(Alignment.BASELINE))
+					.addGap(25))
+				.addGroup(gl_layeredPane_2.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_layeredPane_2.createParallelGroup(Alignment.BASELINE)
+						.addComponent(iptdIpField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(iptdDomainFIeld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(iptdButton))
+					.addContainerGap(40, Short.MAX_VALUE))
+		);
+		layeredPane_2.setLayout(gl_layeredPane_2);
+		GroupLayout gl_panel_1 = new GroupLayout(panel_1);
+		gl_panel_1.setHorizontalGroup(
+			gl_panel_1.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING, gl_panel_1.createSequentialGroup()
+					.addGap(79)
+					.addGroup(gl_panel_1.createParallelGroup(Alignment.TRAILING)
+						.addComponent(layeredPane_2, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 493, Short.MAX_VALUE)
+						.addComponent(layeredPane_1, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE))
+					.addGap(71))
+		);
+		gl_panel_1.setVerticalGroup(
+			gl_panel_1.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel_1.createSequentialGroup()
+					.addGap(65)
+					.addComponent(layeredPane_1, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(layeredPane_2, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(158, Short.MAX_VALUE))
+		);
+		
+		dtipDomainField = new JTextField();
+		dtipDomainField.setColumns(10);
+		
+		JButton dtipButton = new JButton("->");
+		
+		dtipIpField = new JTextField();
+		dtipIpField.setColumns(10);
+		GroupLayout gl_layeredPane_1 = new GroupLayout(layeredPane_1);
+		gl_layeredPane_1.setHorizontalGroup(
+			gl_layeredPane_1.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_layeredPane_1.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(dtipDomainField, GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
+					.addGap(12)
+					.addComponent(dtipButton, GroupLayout.DEFAULT_SIZE, 51, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(dtipIpField, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		gl_layeredPane_1.setVerticalGroup(
+			gl_layeredPane_1.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_layeredPane_1.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_layeredPane_1.createParallelGroup(Alignment.BASELINE, false)
+						.addComponent(dtipDomainField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(dtipButton)
+						.addComponent(dtipIpField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+					.addGap(40))
+		);
+		layeredPane_1.setLayout(gl_layeredPane_1);
+		panel_1.setLayout(gl_panel_1);
 		
 		JPanel settingsPanel = new JPanel();
 		tabbedPane.addTab("Settings", null, settingsPanel, null);
@@ -386,8 +548,30 @@ public class GUI extends JFrame {
 		txtrIpTools.setFont(new Font("Monospaced", Font.PLAIN, 20));
 		txtrIpTools.setBackground(UIManager.getColor("Button.background"));
 		txtrIpTools.setLineWrap(true);
-		txtrIpTools.setText("IP Tools.\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nMade by videosambo\r\nGUI licensed");
+		txtrIpTools.setText("IP Tools.\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nMade by videosambo\r\nMIT licensed");
+		
+		JPanel panel_2 = new JPanel();
+		tabbedPane.addTab("Console", null, panel_2, null);
+		panel_2.setLayout(new GridLayout(0, 1, 0, 0));
+		
+		JEditorPane dtrpnDawwdnajosd = new JEditorPane();
+		dtrpnDawwdnajosd.setEditable(false);
+		dtrpnDawwdnajosd.setForeground(Color.GREEN);
+		dtrpnDawwdnajosd.setBackground(Color.BLACK);
+		panel_2.add(dtrpnDawwdnajosd);
 	}
 	private static void addPopup(Component component, final JPopupMenu popup) {
+	}
+
+	public JTextField getBooterAddressField() {
+		return booterAddressField;
+	}
+
+	public JTextField getBooterPortField() {
+		return booterPortField;
+	}
+
+	public JTextField getWhoisSearchField() {
+		return whoisSearchField;
 	}
 }

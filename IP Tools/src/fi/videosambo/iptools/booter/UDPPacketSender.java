@@ -1,4 +1,4 @@
-package fi.videosambo.iptools;
+package fi.videosambo.iptools.booter;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
