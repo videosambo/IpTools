@@ -5,8 +5,6 @@ I take no responsibility for any abuse or wrong use.
 ## Download
 Jar version file: [Click here](https://github.com/videosambo/IpTools/raw/master/IPToolsJAR.jar)
 
-Exe version file: [Click here](https://github.com/videosambo/IpTools/raw/master/IPTools.exe)
-
 
 ## TODO
 - [x] Packet sender
@@ -18,3 +16,5 @@ Exe version file: [Click here](https://github.com/videosambo/IpTools/raw/master/
 - [ ] Settings
 - [x] Console output for debuging
 
+## WIKI
+[Go to IP Tools WIKI page](https://github.com/videosambo/iptools/wiki/)
