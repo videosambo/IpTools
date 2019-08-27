@@ -3,7 +3,7 @@ Tool to check info of ip or domain. Provides peneration tester. Education purpos
 I take no responsibility for any abuse or wrong use.
 
 ## Download
-Jar version file: [Click here](https://github.com/videosambo/IpTools/raw/master/IPTools.jar)
+Jar version file: [Click here](https://github.com/videosambo/IpTools/raw/master/IPToolsJAR.jar)
 
 Exe version file: [Click here](https://github.com/videosambo/IpTools/raw/master/IPTools.exe)
 
