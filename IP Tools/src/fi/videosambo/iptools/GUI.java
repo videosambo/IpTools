@@ -7,8 +7,14 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Label;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -18,6 +24,7 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
@@ -28,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
@@ -37,6 +45,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.BevelBorder;
@@ -45,6 +54,8 @@ import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import fi.videosambo.iptools.booter.TCPPacketSender;
 import fi.videosambo.iptools.booter.UDPPacketSender;
@@ -83,6 +94,9 @@ public class GUI extends JFrame {
 	private Scan scan;
 	
 	private boolean scanRunning = false;
+	private final ButtonGroup buttonGroup_1 = new ButtonGroup();
+	private final ButtonGroup buttonGroup_2 = new ButtonGroup();
+	private static JTextField settingsWHOISApiKey;
 	
 	/**
 	 * Launch the application.
@@ -112,6 +126,10 @@ public class GUI extends JFrame {
 	 * Create the frame.
 	 */
 	public GUI() {
+		settingsWHOISApiKey = new JTextField();
+		consoleLog = new JEditorPane();
+		settingsWHOISApiKey.setText("at_J7TntBlVBoWiwPElcLFbpdo9I30kC");
+		setIconImage(Toolkit.getDefaultToolkit().getImage(GUI.class.getResource("/img/iptoolsicon.png")));
 		setTitle("IP Tools");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 676, 477);
@@ -222,11 +240,71 @@ public class GUI extends JFrame {
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 		
-		JMenuItem mntmSave = new JMenuItem("Save");
-		mnFile.add(mntmSave);
 		
-		JMenuItem mntmLoad = new JMenuItem("Load");
-		mnFile.add(mntmLoad);
+		JSpinner booterPacketCount = new JSpinner();
+		
+		JEditorPane packetContent = new JEditorPane();
+		
+		
+		JMenuItem booterSave = new JMenuItem("Save");
+		booterSave.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//address::port::packetcount::packetcontent
+				String saveContent = booterAddressField.getText() + "::" + booterPortField.getText() + "::" + booterPacketCount.getValue() + "::" + packetContent.getText();
+				JFileChooser chooser = new JFileChooser();
+				chooser.setDialogTitle("Specify a file to save"); 
+				chooser.setApproveButtonText("Save");
+				chooser.setFileFilter(new FileNameExtensionFilter("Text Document", "txt"));
+				int selected = chooser.showSaveDialog(new JFrame("Save file"));
+				if (selected == JFileChooser.APPROVE_OPTION) {
+					try {
+						FileWriter fw = new FileWriter(chooser.getSelectedFile() + ".txt");
+						fw.write(saveContent);
+						fw.close();
+					} catch (Exception e2) {
+			            e2.printStackTrace();
+			        }
+				}
+			}
+		});
+		mnFile.add(booterSave);
+		
+		JMenuItem booterLoad = new JMenuItem("Load");
+		booterLoad.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser chooser = new JFileChooser();
+				chooser.setDialogTitle("Specify a file to load");
+				chooser.setApproveButtonText("Load");
+				int selected = chooser.showOpenDialog(new JFrame("Load file"));
+				if (selected == JFileChooser.APPROVE_OPTION) {
+					File selectedFile = chooser.getSelectedFile();
+					if (selectedFile.canRead()) {
+						try {
+							FileReader reader = new FileReader(selectedFile);
+							BufferedReader buff = new BufferedReader(reader);
+							String loadContent = buff.readLine();
+							buff.close();
+							if (loadContent != null) {
+								String[] fields = loadContent.split("::");
+								booterAddressField.setText(fields[0]);
+								booterPortField.setText(fields[1]);
+								booterPacketCount.setValue(Integer.parseInt(fields[2]));
+								packetContent.setText(fields[3]);
+							}
+						} catch (IOException e1) {
+							e1.printStackTrace();
+							logConsole("ERROR: Cannot read file!");
+							return;
+						}
+					} else {
+						logConsole("ERROR: Cannot read file!");
+						return;
+					}
+				}
+			}
+		});
+		mnFile.add(booterLoad);
 		GroupLayout gl_layeredPane = new GroupLayout(layeredPane);
 		gl_layeredPane.setHorizontalGroup(
 			gl_layeredPane.createParallelGroup(Alignment.LEADING)
@@ -239,8 +317,6 @@ public class GUI extends JFrame {
 					.addGap(1))
 		);
 		layeredPane.setLayout(gl_layeredPane);
-		
-		JSpinner booterPacketCount = new JSpinner();
 		booterPacketCount.setToolTipText("You can adjust packet count here");
 		
 		
@@ -292,8 +368,6 @@ public class GUI extends JFrame {
 		
 		JScrollPane scrollPane = new JScrollPane();
 		packetPanel.add(scrollPane);
-		
-		JEditorPane packetContent = new JEditorPane();
 		packetContent.setFont(new Font("Monospaced", Font.PLAIN, 16));
 		packetContent.setToolTipText("Type here content of your packet");
 		scrollPane.setViewportView(packetContent);
@@ -1012,10 +1086,6 @@ public class GUI extends JFrame {
 			}
 		});
 		
-		
-		JPanel settingsPanel = new JPanel();
-		tabbedPane.addTab("Settings", null, settingsPanel, null);
-		
 		JPanel aboutPanel = new JPanel();
 		tabbedPane.addTab("About", null, aboutPanel, null);
 		aboutPanel.setLayout(new BorderLayout(0, 0));
@@ -1038,14 +1108,153 @@ public class GUI extends JFrame {
 		txtrIpTools.setFont(new Font("Monospaced", Font.PLAIN, 20));
 		txtrIpTools.setBackground(UIManager.getColor("Button.background"));
 		txtrIpTools.setLineWrap(true);
-		txtrIpTools.setText("IP Tools.\r\nVersion Beta 1.1\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nMade by videosambo\r\nMIT licensed");
+		txtrIpTools.setText("IP Tools.\r\nVersion Beta 1.1\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nThere is still plenty of features that are not avaible yet, but they will be soon!\r\nMade by videosambo\r\nMIT licensed");
+		
+		
+		JPanel settingsPanel = new JPanel();
+		tabbedPane.addTab("Settings", null, settingsPanel, null);
+		
+		JLayeredPane settingsLanguagePanel = new JLayeredPane();
+		settingsLanguagePanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Languages", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		
+		JLayeredPane settingsPacketSettingsPanel = new JLayeredPane();
+		settingsPacketSettingsPanel.setBorder(new TitledBorder(null, "PacketSettings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		
+		JLayeredPane settingsThemesPanel = new JLayeredPane();
+		settingsThemesPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Themes", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		
+		JLayeredPane layeredPane_3 = new JLayeredPane();
+		layeredPane_3.setBorder(new TitledBorder(null, "API Key", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		GroupLayout gl_settingsPanel = new GroupLayout(settingsPanel);
+		gl_settingsPanel.setHorizontalGroup(
+			gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPanel.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+						.addComponent(settingsPacketSettingsPanel, GroupLayout.PREFERRED_SIZE, 168, GroupLayout.PREFERRED_SIZE)
+						.addGroup(gl_settingsPanel.createSequentialGroup()
+							.addComponent(settingsLanguagePanel, GroupLayout.PREFERRED_SIZE, 168, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(settingsThemesPanel, GroupLayout.PREFERRED_SIZE, 182, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(layeredPane_3, GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)))
+					.addContainerGap())
+		);
+		gl_settingsPanel.setVerticalGroup(
+			gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPanel.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_settingsPanel.createParallelGroup(Alignment.TRAILING, false)
+						.addComponent(layeredPane_3, Alignment.LEADING)
+						.addComponent(settingsLanguagePanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+						.addComponent(settingsThemesPanel, Alignment.LEADING))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(settingsPacketSettingsPanel, GroupLayout.DEFAULT_SIZE, 246, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		
+		settingsWHOISApiKey.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				xmldata.setAPIKEY(settingsWHOISApiKey.getText());
+				dnsdata.setAPIKEY(settingsWHOISApiKey.getText());
+				logConsole("Using APIKEY '" + settingsWHOISApiKey.getText() + "'");
+			}
+		});
+		logConsole("Using APIKEY '" + settingsWHOISApiKey.getText() + "'");
+		settingsWHOISApiKey.setToolTipText("Enter whois api key here if you want to use whois and dns lookput");
+		settingsWHOISApiKey.setColumns(10);
+		
+		JLabel lblWhoisApiKey = new JLabel("WHOIS API Key");
+		lblWhoisApiKey.setToolTipText("My api key can run out of uses so you can enter your own");
+		GroupLayout gl_layeredPane_3 = new GroupLayout(layeredPane_3);
+		gl_layeredPane_3.setHorizontalGroup(
+			gl_layeredPane_3.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_layeredPane_3.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_layeredPane_3.createParallelGroup(Alignment.LEADING)
+						.addComponent(settingsWHOISApiKey, GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
+						.addComponent(lblWhoisApiKey))
+					.addContainerGap())
+		);
+		gl_layeredPane_3.setVerticalGroup(
+			gl_layeredPane_3.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_layeredPane_3.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(lblWhoisApiKey)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(settingsWHOISApiKey, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(29, Short.MAX_VALUE))
+		);
+		layeredPane_3.setLayout(gl_layeredPane_3);
+		settingsThemesPanel.setLayout(null);
+		
+		JMenuBar menuBar_2 = new JMenuBar();
+		menuBar_2.setBounds(28, 43, 119, 26);
+		settingsThemesPanel.add(menuBar_2);
+		
+		JMenu mnThemes = new JMenu("Themes");
+		menuBar_2.add(mnThemes);
+		
+		JRadioButtonMenuItem rdbtnmntmLightTheme = new JRadioButtonMenuItem("Light Theme");
+		buttonGroup_2.add(rdbtnmntmLightTheme);
+		rdbtnmntmLightTheme.setSelected(true);
+		mnThemes.add(rdbtnmntmLightTheme);
+		
+		JRadioButtonMenuItem rdbtnmntmDarkTheme = new JRadioButtonMenuItem("Dark Theme");
+		rdbtnmntmDarkTheme.setEnabled(false);
+		buttonGroup_2.add(rdbtnmntmDarkTheme);
+		mnThemes.add(rdbtnmntmDarkTheme);
+		settingsLanguagePanel.setLayout(null);
+		
+		JMenuBar menuBar_1 = new JMenuBar();
+		menuBar_1.setBounds(23, 43, 119, 26);
+		settingsLanguagePanel.add(menuBar_1);
+		
+		JMenu mnLanguage = new JMenu("Language");
+		menuBar_1.add(mnLanguage);
+		
+		JRadioButtonMenuItem rdbtnmntmEnglish = new JRadioButtonMenuItem("English");
+		buttonGroup_1.add(rdbtnmntmEnglish);
+		rdbtnmntmEnglish.setSelected(true);
+		mnLanguage.add(rdbtnmntmEnglish);
+		
+		JRadioButtonMenuItem rdbtnmntmFinnish = new JRadioButtonMenuItem("Finnish");
+		buttonGroup_1.add(rdbtnmntmFinnish);
+		rdbtnmntmFinnish.setEnabled(false);
+		mnLanguage.add(rdbtnmntmFinnish);
+		
+		JSpinner settingsMaxPacketCount = new JSpinner();
+		settingsMaxPacketCount.setEnabled(false);
+		settingsMaxPacketCount.setModel(new SpinnerNumberModel(new Integer(1000000), null, null, new Integer(1)));
+		
+		JLabel settingsMaxPackets = new JLabel("Max Packet Count");
+		GroupLayout gl_settingsPacketSettingsPanel = new GroupLayout(settingsPacketSettingsPanel);
+		gl_settingsPacketSettingsPanel.setHorizontalGroup(
+			gl_settingsPacketSettingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPacketSettingsPanel.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_settingsPacketSettingsPanel.createParallelGroup(Alignment.LEADING)
+						.addComponent(settingsMaxPackets, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
+						.addComponent(settingsMaxPacketCount, GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE))
+					.addContainerGap())
+		);
+		gl_settingsPacketSettingsPanel.setVerticalGroup(
+			gl_settingsPacketSettingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPacketSettingsPanel.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(settingsMaxPackets)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(settingsMaxPacketCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(163, Short.MAX_VALUE))
+		);
+		settingsPacketSettingsPanel.setLayout(gl_settingsPacketSettingsPanel);
+		settingsPanel.setLayout(gl_settingsPanel);
 		
 		JPanel consolePanel = new JPanel();
 		consolePanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		tabbedPane.addTab("Console", null, consolePanel, null);
 		consolePanel.setLayout(new GridLayout(0, 1, 0, 0));
 		
-		consoleLog = new JEditorPane();
 		consoleLog.setEditable(false);
 		consoleLog.setBackground(Color.BLACK);
 		consoleLog.setForeground(Color.GREEN);
@@ -1056,6 +1265,16 @@ public class GUI extends JFrame {
 		logConsole("IP Tools Started!");
 	}
 	
+	public static String getSettingsWHOISApiKey() {
+		if (settingsWHOISApiKey != null) {
+			if (settingsWHOISApiKey.getText() != null) {
+				return settingsWHOISApiKey.getText();
+			}
+		}
+		
+		return "at_J7TntBlVBoWiwPElcLFbpdo9I30kC";
+	}
+
 	private boolean isRunning() {
 		if (t != null)
 			return true; 

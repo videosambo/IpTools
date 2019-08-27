@@ -17,10 +17,18 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-public class GetDNSRecordXMLData {
+import fi.videosambo.iptools.GUI;
 
-	private static final String url = "https://www.whoisxmlapi.com/whoisserver/DNSService?apiKey=at_ljeidY2VgHYOKZVS0Id3MNs38uw9G&type=_all&domainName=";
+public class GetDNSRecordXMLData {
 	
+	private static String APIKEY = GUI.getSettingsWHOISApiKey();
+	
+	private static String url = "https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=" + APIKEY + "&type=_all&domainName=";
+	
+	public static void setAPIKEY(String aPIKEY) {
+		APIKEY = aPIKEY;
+	}
+
 	public String getXMLContentAsString(String address) {
 		return convertDocumentToString(getXMLContentAsDocument(address));
 	}
