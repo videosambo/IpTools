@@ -9,11 +9,14 @@ import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -32,12 +35,24 @@ import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import fi.videosambo.iptools.whois.GetXMLData;
+import fi.videosambo.iptools.booter.TCPPacketSender;
+import fi.videosambo.iptools.booter.UDPPacketSender;
+import fi.videosambo.iptools.ipscanner.Scan;
+import fi.videosambo.iptools.iptool.Converter;
+import fi.videosambo.iptools.whois.GetAddressXMLData;
+import fi.videosambo.iptools.whois.GetDNSRecordXMLData;
+import net.boplicity.xmleditor.XmlEditorKit;
 
 public class GUI extends JFrame {
 
@@ -47,17 +62,40 @@ public class GUI extends JFrame {
 	private JTextField booterPortField;
 	private JTextField whoisSearchField;
 
-	private GetXMLData xmldata = new GetXMLData();
+	private GetAddressXMLData xmldata = new GetAddressXMLData();
+	private Converter coverter = new Converter();
+	private GetDNSRecordXMLData dnsdata = new GetDNSRecordXMLData();
+	private TCPPacketSender tcpSender;
+	private UDPPacketSender udpSender;
+	
 	private JTextField dnsSearchField;
 	private JTextField dtipDomainField;
 	private JTextField dtipIpField;
 	private JTextField iptdIpField;
 	private JTextField iptdDomainFIeld;
 	
+	JEditorPane consoleLog;
+	
+	private XmlToTree xmlToTree;
+	
+	private Thread t;
+	private JTextField ipscanAddress;
+	private Scan scan;
+	
+	private boolean scanRunning = false;
+	
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e1) {
+			e1.printStackTrace();
+		}
+		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -109,9 +147,11 @@ public class GUI extends JFrame {
 		
 		JLayeredPane layeredPane = new JLayeredPane();
 		layeredPane.setBorder(null);
+		
+		JButton booterSTOP = new JButton("STOP");
 		GroupLayout gl_booterPanel = new GroupLayout(booterPanel);
 		gl_booterPanel.setHorizontalGroup(
-			gl_booterPanel.createParallelGroup(Alignment.TRAILING)
+			gl_booterPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_booterPanel.createSequentialGroup()
 					.addGap(35)
 					.addGroup(gl_booterPanel.createParallelGroup(Alignment.LEADING)
@@ -128,13 +168,15 @@ public class GUI extends JFrame {
 					.addGap(25)
 					.addComponent(booterLaunch, GroupLayout.PREFERRED_SIZE, 106, GroupLayout.PREFERRED_SIZE)
 					.addGap(18)
-					.addComponent(booterProgbar, GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
-					.addGap(29))
+					.addComponent(booterProgbar, GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(booterSTOP, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+					.addContainerGap())
 				.addGroup(gl_booterPanel.createSequentialGroup()
 					.addContainerGap()
 					.addComponent(booterSeparator, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE)
 					.addContainerGap())
-				.addComponent(layeredPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
+				.addComponent(layeredPane, GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
 		);
 		gl_booterPanel.setVerticalGroup(
 			gl_booterPanel.createParallelGroup(Alignment.LEADING)
@@ -153,14 +195,27 @@ public class GUI extends JFrame {
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(booterSeparator, GroupLayout.PREFERRED_SIZE, 15, GroupLayout.PREFERRED_SIZE)
 					.addGap(18)
-					.addGroup(gl_booterPanel.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_booterPanel.createSequentialGroup()
-							.addComponent(booterProgbar, GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
-							.addGap(18))
-						.addGroup(gl_booterPanel.createSequentialGroup()
-							.addComponent(booterLaunch, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
-							.addContainerGap())))
+					.addGroup(gl_booterPanel.createParallelGroup(Alignment.LEADING, false)
+						.addComponent(booterLaunch, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
+						.addComponent(booterProgbar, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
+						.addComponent(booterSTOP, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE))
+					.addContainerGap())
 		);
+		
+		booterSTOP.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (t == null || !t.isAlive())
+					return;
+				t.interrupt();
+				booterProgbar.setIndeterminate(false);
+				booterProgbar.setStringPainted(false);
+				booterProgbar.setValue(0);
+				booterProgbar.setMaximum(100);
+				logConsole("Thread interrupted!");
+			}
+		});
 		
 		JMenuBar menuBar = new JMenuBar();
 		
@@ -185,40 +240,61 @@ public class GUI extends JFrame {
 		);
 		layeredPane.setLayout(gl_layeredPane);
 		
-		JSpinner spinner = new JSpinner();
-		spinner.setToolTipText("You can adjust packet count here");
+		JSpinner booterPacketCount = new JSpinner();
+		booterPacketCount.setToolTipText("You can adjust packet count here");
 		
-		JSlider slider = new JSlider();
-		slider.setToolTipText("Packet count to send, do not use 0 or it will not work");
-		slider.setValue(1);
-		slider.setMinimum(-1);
-		slider.setMinorTickSpacing(50000);
-		slider.setPaintTicks(true);
-		slider.setMaximum(1000000);
+		
+		JSlider booterSlider = new JSlider();
+		booterSlider.setToolTipText("Packet count to send, do not use 0 or it will not work");
+		booterSlider.setValue(1);
+		booterSlider.setMinimum(-1);
+		booterSlider.setMinorTickSpacing(50000);
+		booterSlider.setPaintTicks(true);
+		booterSlider.setMaximum(1000000);
 		GroupLayout gl_packetCountPanel = new GroupLayout(packetCountPanel);
 		gl_packetCountPanel.setHorizontalGroup(
 			gl_packetCountPanel.createParallelGroup(Alignment.LEADING)
-				.addComponent(slider, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
+				.addComponent(booterSlider, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
 				.addGroup(gl_packetCountPanel.createSequentialGroup()
 					.addGap(12)
-					.addComponent(spinner, GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
+					.addComponent(booterPacketCount, GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
 					.addGap(12))
 		);
 		gl_packetCountPanel.setVerticalGroup(
 			gl_packetCountPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(Alignment.TRAILING, gl_packetCountPanel.createSequentialGroup()
 					.addContainerGap()
-					.addComponent(spinner, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+					.addComponent(booterPacketCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.RELATED, 49, Short.MAX_VALUE)
-					.addComponent(slider, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE))
+					.addComponent(booterSlider, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE))
 		);
 		packetCountPanel.setLayout(gl_packetCountPanel);
 		packetPanel.setLayout(new GridLayout(1, 0, 0, 0));
+		
+		booterSlider.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				booterPacketCount.setValue(booterSlider.getValue());
+			}
+		});
+		booterPacketCount.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				if ((int)booterPacketCount.getValue() < -1)
+					booterPacketCount.setValue(-1);
+				if ((int)booterPacketCount.getValue() > 1000000)
+					booterPacketCount.setValue(1000000);
+				booterSlider.setValue((int) booterPacketCount.getValue());
+			}
+		});
 		
 		JScrollPane scrollPane = new JScrollPane();
 		packetPanel.add(scrollPane);
 		
 		JEditorPane packetContent = new JEditorPane();
+		packetContent.setFont(new Font("Monospaced", Font.PLAIN, 16));
 		packetContent.setToolTipText("Type here content of your packet");
 		scrollPane.setViewportView(packetContent);
 		
@@ -287,6 +363,113 @@ public class GUI extends JFrame {
 		protocolPanel.setLayout(gl_protocolPanel);
 		booterPanel.setLayout(gl_booterPanel);
 		
+		booterLaunch.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String content = packetContent.getText();
+				String address = booterAddressField.getText();
+				int port = Integer.parseInt(booterPortField.getText());
+				int packetCount = booterSlider.getValue();
+				if (content.isEmpty() || content == null) {
+					logConsole("ERROR: Packet content is empty");
+					return;
+				}
+				if (address.isEmpty() || address == null) {
+					logConsole("ERROR: Address field is empty");
+					return;
+				}
+				if (port == 0) {
+					logConsole("ERROR: Port cannot be 0");
+					return;
+				}
+				if (packetCount == 0) {
+					logConsole("ERROR: Packet count cannot be 0");
+					return;
+				}
+				if (radioTCP.isSelected()) {
+					tcpSender = new TCPPacketSender(address, port);
+					if (packetCount == -1) {
+						if (isRunning())
+							t.interrupt();
+						logConsole("Sending TCP packets!");
+						t = new Thread(new Runnable() {
+
+							@Override
+							public void run() {
+								booterProgbar.setIndeterminate(true);
+								while (true) {
+									tcpSender.sendStringPacket(content);
+								}
+							}
+						});
+						t.setDaemon(true);
+						t.start();
+					} else {
+						tcpSender = new TCPPacketSender(address, port);
+						if (isRunning())
+							t.interrupt();
+						logConsole("Starting sending TCP packets...");
+						t = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								booterProgbar.setStringPainted(true);
+								booterProgbar.setMaximum(packetCount+1);
+								for (int i = 0; i < packetCount; i++) {
+									booterProgbar.setValue(i);
+									tcpSender.sendStringPacket(content);
+								}
+								booterProgbar.setStringPainted(false);
+								tcpSender.closeSocket();
+								logConsole("All TCP packets sended!");
+							}
+						});
+						t.setDaemon(true);
+						t.start();
+					}
+				} else if (radioUDP.isSelected()) {
+					udpSender = new UDPPacketSender(address, port);
+					if (packetCount == -1) {
+						if (isRunning())
+							t.interrupt();
+						logConsole("Sending UDP packets!");
+						t = new Thread(new Runnable() {
+
+							@Override
+							public void run() {
+								booterProgbar.setIndeterminate(true);
+								while (true) {
+									udpSender.sendStringPacket(content);
+								}
+							}
+						});
+						t.setDaemon(true);
+						t.start();
+					} else {
+						udpSender = new UDPPacketSender(address, port);
+						logConsole("Starting sending UDP packets...");
+						t = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								booterProgbar.setStringPainted(true);
+								booterProgbar.setMaximum(packetCount+1);
+								for (int i = 0; i < packetCount + 1; i++) {
+									booterProgbar.setValue(i);
+									udpSender.sendStringPacket(content);
+								}
+								booterProgbar.setStringPainted(false);
+								udpSender.closeSocket();
+								logConsole("All UDP packets sended!");
+							}
+						});
+						t.setDaemon(true);
+						t.start();
+					}
+				} else {
+					logConsole("ERROR: Invalid state");
+				}
+			}
+		});
+		
 		JPanel whoIsPanel = new JPanel();
 		tabbedPane.addTab("WHOIS", null, whoIsPanel, null);
 		
@@ -317,12 +500,26 @@ public class GUI extends JFrame {
 		);
 		whoisEditorPanel.setLayout(new GridLayout(1, 0, 0, 0));
 		
+		JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.TOP);
+		whoisEditorPanel.add(tabbedPane_1);
+		
+		JPanel panel_2 = new JPanel();
+		tabbedPane_1.addTab("Editor", null, panel_2, null);
+		panel_2.setLayout(new GridLayout(0, 1, 0, 0));
+		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		whoisEditorPanel.add(scrollPane_1);
+		panel_2.add(scrollPane_1);
 		
 		JEditorPane whoisEditor = new JEditorPane();
-		whoisEditor.setFont(new Font("Monospaced", Font.PLAIN, 25));
 		scrollPane_1.setViewportView(whoisEditor);
+		whoisEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
+		
+		JPanel whoisTreePane = new JPanel();
+		tabbedPane_1.addTab("Tree View", null, whoisTreePane, null);
+		whoisTreePane.setLayout(new GridLayout(0, 1, 0, 0));
+		
+		JScrollPane scrollPane_5 = new JScrollPane();
+		whoisTreePane.add(scrollPane_5);
 		
 		whoisSearchField = new JTextField();
 		whoisSearchField.setColumns(10);
@@ -342,8 +539,24 @@ public class GUI extends JFrame {
 		whoisSearchButton.addActionListener(new ActionListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent e) {			
+			public void actionPerformed(ActionEvent e) {
+				logConsole("Searching domain/ip information of " + whoisSearchField.getText());
+				whoisEditor.setEditorKitForContentType("text/xml", new XmlEditorKit());
+		        whoisEditor.setContentType("text/xml");
 				whoisEditor.setText(xmldata.getXMLContentAsString(whoisSearchField.getText()));
+				//TODO
+				xmlToTree = new XmlToTree(xmldata.getXMLContentAsDocument(whoisSearchField.getText()));
+				if (xmlToTree.show() == null) {
+					logConsole("ERROR: Tree not defined!");
+					return;
+				}
+				JTree whoisXMLTree = xmlToTree.show();
+				scrollPane_5.setViewportView(whoisXMLTree);
+				whoisXMLTree.setVisible(true);
+				xmlToTree.expandAllNodes();
+				whoisXMLTree = xmlToTree.show();
+				//TODO
+				logConsole("Searching completed!");
 			}
 		});
 		
@@ -384,6 +597,9 @@ public class GUI extends JFrame {
 					.addComponent(dnsSearchButton, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
 					.addGap(6))
 		);
+		
+		
+		
 		gl_dnslookupSearchPanel.setVerticalGroup(
 			gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
 				.addGap(0, 66, Short.MAX_VALUE)
@@ -421,15 +637,54 @@ public class GUI extends JFrame {
 					.addContainerGap())
 		);
 		
+		JTabbedPane tabbedPane_2 = new JTabbedPane(JTabbedPane.TOP);
+		dnsEditorPanel.add(tabbedPane_2);
+		
+		JPanel panel_4 = new JPanel();
+		tabbedPane_2.addTab("Editor", null, panel_4, null);
+		panel_4.setLayout(new GridLayout(0, 1, 0, 0));
+		
 		JScrollPane scrollPane_3 = new JScrollPane();
-		dnsEditorPanel.add(scrollPane_3);
+		panel_4.add(scrollPane_3);
 		
 		JEditorPane dnsEditor = new JEditorPane();
+		dnsEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
 		scrollPane_3.setViewportView(dnsEditor);
+		
+		JPanel dnsTreePanel = new JPanel();
+		tabbedPane_2.addTab("Tree View", null, dnsTreePanel, null);
+		dnsTreePanel.setLayout(new GridLayout(0, 1, 0, 0));
 		dnslookupPanel.setLayout(gl_dnslookupPanel);
 		
+		JScrollPane scrollPane_6 = new JScrollPane();
+		dnsTreePanel.add(scrollPane_6);
+		
+		dnsSearchButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				logConsole("Starting searching dns information of " + dnsSearchField.getText());
+				dnsEditor.setEditorKitForContentType("text/xml", new XmlEditorKit());
+				dnsEditor.setContentType("text/xml");
+				dnsEditor.setText(dnsdata.getXMLContentAsString(dnsSearchField.getText()));
+				//TODO
+				xmlToTree = new XmlToTree(dnsdata.getXMLContentAsDocument(dnsSearchField.getText()));
+				if (xmlToTree.show() == null) {
+					logConsole("ERROR: Tree not defined!");
+					return;
+				}
+				JTree dnsXMLTree = xmlToTree.show();
+				scrollPane_6.setViewportView(dnsXMLTree);
+				dnsXMLTree.setVisible(true);
+				xmlToTree.expandAllNodes();
+				dnsXMLTree = xmlToTree.show();
+				dnsTreePanel.add(scrollPane_6);
+				logConsole("Searching completed!");
+			}
+		});
+		
 		JPanel panel_1 = new JPanel();
-		tabbedPane.addTab("Domain to IP", null, panel_1, null);
+		tabbedPane.addTab("Converter", null, panel_1, "Here you can convert ip to domain and domain to ip");
 		
 		JLayeredPane layeredPane_1 = new JLayeredPane();
 		layeredPane_1.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Domain to IP converter", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
@@ -441,6 +696,17 @@ public class GUI extends JFrame {
 		iptdIpField.setColumns(10);
 		
 		JButton iptdButton = new JButton("->");
+		iptdButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (iptdIpField.getText().isEmpty()) {
+					logConsole("ERROR: IP Field is empty!");
+					return;
+				}
+				iptdDomainFIeld.setText(coverter.getDomain(iptdIpField.getText()));
+				logConsole("Converted " + iptdIpField.getText() + " to " + coverter.getDomain(iptdIpField.getText()));
+			}});
 		
 		iptdDomainFIeld = new JTextField();
 		iptdDomainFIeld.setColumns(10);
@@ -495,6 +761,17 @@ public class GUI extends JFrame {
 		dtipDomainField.setColumns(10);
 		
 		JButton dtipButton = new JButton("->");
+		dtipButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (dtipDomainField.getText().isEmpty()) {
+					logConsole("ERROR: Domain field is empty!");
+					return;
+				}
+				dtipIpField.setText(coverter.getIP(dtipDomainField.getText()));
+				logConsole("Converted " + dtipDomainField.getText() + " to " + coverter.getIP(dtipDomainField.getText()));
+			}});
 		
 		dtipIpField = new JTextField();
 		dtipIpField.setColumns(10);
@@ -523,6 +800,219 @@ public class GUI extends JFrame {
 		layeredPane_1.setLayout(gl_layeredPane_1);
 		panel_1.setLayout(gl_panel_1);
 		
+		JPanel panel_3 = new JPanel();
+		tabbedPane.addTab("IP Scanner", null, panel_3, null);
+		
+		JLayeredPane ipscanPorts = new JLayeredPane();
+		ipscanPorts.setBorder(new TitledBorder(null, "Port range", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		
+		JLayeredPane ipscanControl = new JLayeredPane();
+		ipscanControl.setBorder(new TitledBorder(null, "Control Panel", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		
+		JLayeredPane ipscanLogPanel = new JLayeredPane();
+		ipscanLogPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		GroupLayout gl_panel_3 = new GroupLayout(panel_3);
+		gl_panel_3.setHorizontalGroup(
+			gl_panel_3.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel_3.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_panel_3.createParallelGroup(Alignment.LEADING)
+						.addComponent(ipscanPorts, GroupLayout.PREFERRED_SIZE, 285, GroupLayout.PREFERRED_SIZE)
+						.addComponent(ipscanControl, GroupLayout.PREFERRED_SIZE, 285, GroupLayout.PREFERRED_SIZE))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(ipscanLogPanel, GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		gl_panel_3.setVerticalGroup(
+			gl_panel_3.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel_3.createSequentialGroup()
+					.addGap(40)
+					.addGroup(gl_panel_3.createParallelGroup(Alignment.LEADING)
+						.addComponent(ipscanLogPanel, GroupLayout.DEFAULT_SIZE, 337, Short.MAX_VALUE)
+						.addGroup(gl_panel_3.createSequentialGroup()
+							.addComponent(ipscanPorts, GroupLayout.PREFERRED_SIZE, 80, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(ipscanControl, GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)))
+					.addContainerGap())
+		);
+		ipscanLogPanel.setLayout(new GridLayout(1, 0, 0, 0));
+		
+		JScrollPane scrollPane_4 = new JScrollPane();
+		ipscanLogPanel.add(scrollPane_4);
+		
+		JEditorPane ipscanLog = new JEditorPane();
+		scrollPane_4.setViewportView(ipscanLog);
+		ipscanLog.setEditable(false);
+		ipscanLog.setForeground(Color.GREEN);
+		ipscanLog.setBackground(Color.BLACK);
+		
+		JButton ipscanButton = new JButton("Start Scanning");
+		
+		JCheckBox ipscanOpenPort = new JCheckBox("Open port");
+		
+		JCheckBox ipscanOSDetect = new JCheckBox("OS Detect");
+		ipscanOSDetect.setEnabled(false);
+		
+		JLabel ipscanAddresLabel = new JLabel("Address");
+		
+		ipscanAddress = new JTextField();
+		ipscanAddress.setColumns(10);
+		
+		JProgressBar ipscanProgbar = new JProgressBar();
+		
+		JButton ipscanCancel = new JButton("Cancel");
+		GroupLayout gl_ipscanControl = new GroupLayout(ipscanControl);
+		gl_ipscanControl.setHorizontalGroup(
+			gl_ipscanControl.createParallelGroup(Alignment.TRAILING)
+				.addGroup(gl_ipscanControl.createSequentialGroup()
+					.addGap(6)
+					.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+						.addComponent(ipscanOpenPort, GroupLayout.PREFERRED_SIZE, 113, GroupLayout.PREFERRED_SIZE)
+						.addComponent(ipscanOSDetect, GroupLayout.PREFERRED_SIZE, 113, GroupLayout.PREFERRED_SIZE))
+					.addGap(8)
+					.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+						.addComponent(ipscanProgbar, GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
+						.addComponent(ipscanButton, GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE))
+					.addGap(6))
+				.addGroup(gl_ipscanControl.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(ipscanAddress, GroupLayout.DEFAULT_SIZE, 249, Short.MAX_VALUE)
+					.addContainerGap())
+				.addGroup(gl_ipscanControl.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(ipscanAddresLabel, GroupLayout.PREFERRED_SIZE, 56, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(205, Short.MAX_VALUE))
+				.addGroup(Alignment.LEADING, gl_ipscanControl.createSequentialGroup()
+					.addGap(190)
+					.addComponent(ipscanCancel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		gl_ipscanControl.setVerticalGroup(
+			gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_ipscanControl.createSequentialGroup()
+					.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_ipscanControl.createSequentialGroup()
+							.addGap(12)
+							.addComponent(ipscanOpenPort)
+							.addGap(5)
+							.addComponent(ipscanOSDetect)
+							.addPreferredGap(ComponentPlacement.RELATED, 91, Short.MAX_VALUE)
+							.addComponent(ipscanAddresLabel))
+						.addGroup(gl_ipscanControl.createSequentialGroup()
+							.addComponent(ipscanButton, GroupLayout.PREFERRED_SIZE, 49, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(ipscanProgbar, GroupLayout.PREFERRED_SIZE, 31, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(ipscanCancel, GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)))
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(ipscanAddress, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap())
+		);
+		ipscanControl.setLayout(gl_ipscanControl);
+		
+		ipscanCancel.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				scanRunning = false;
+			}
+		});
+		
+		JLabel lblFromPort = new JLabel("From port");
+		
+		JLabel lblToPort = new JLabel("To port");
+		
+		JSpinner ipscanPort1 = new JSpinner();
+		
+		JSpinner ipscanPort2 = new JSpinner();
+		GroupLayout gl_ipscanPorts = new GroupLayout(ipscanPorts);
+		gl_ipscanPorts.setHorizontalGroup(
+			gl_ipscanPorts.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_ipscanPorts.createSequentialGroup()
+					.addGap(33)
+					.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.TRAILING)
+						.addComponent(ipscanPort1, GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE)
+						.addGroup(gl_ipscanPorts.createSequentialGroup()
+							.addGap(35)
+							.addComponent(lblFromPort, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+					.addGap(7)
+					.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.TRAILING)
+						.addComponent(ipscanPort2, GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE)
+						.addGroup(gl_ipscanPorts.createSequentialGroup()
+							.addGap(50)
+							.addComponent(lblToPort, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+					.addGap(49))
+		);
+		gl_ipscanPorts.setVerticalGroup(
+			gl_ipscanPorts.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_ipscanPorts.createSequentialGroup()
+					.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.BASELINE)
+						.addComponent(lblToPort)
+						.addComponent(lblFromPort, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.BASELINE)
+						.addComponent(ipscanPort1)
+						.addComponent(ipscanPort2))
+					.addGap(10))
+		);
+		ipscanPorts.setLayout(gl_ipscanPorts);
+		panel_3.setLayout(gl_panel_3);
+		
+		ipscanButton.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (ipscanAddress.getText().isEmpty() || ipscanAddress.getText() == null) {
+					logConsole("ERROR: IP address not defined!");
+					return;
+				}
+				if ((int)ipscanPort1.getValue() == 0 || (int)ipscanPort2.getValue() == 0) {
+					logConsole("ERROR: Port cannot be 0");
+					return;
+				}
+				if ((int)ipscanPort1.getValue() > (int)ipscanPort2.getValue()) {
+					logConsole("ERROR: Port range cannot be negative!");
+					return;
+				}
+				ipscanLog.setText(ipscanLog.getText()+"Startig scanning" + ipscanAddress.getText() + "\n");
+				logConsole("Startig scanning" + ipscanAddress.getText());
+				if (ipscanOpenPort.isSelected()) {
+					if ((int)ipscanPort1.getValue() == (int)ipscanPort2.getValue()) {
+						ipscanProgbar.setIndeterminate(true);
+						scan = new Scan(ipscanAddress.getText(), 200);
+						ipscanLog.setText(ipscanLog.getText()+scan.scanPort((int)ipscanPort1.getValue()));
+						ipscanProgbar.setIndeterminate(false);
+						scan.closeSocket();
+					} else {
+						ipscanLog.setText(ipscanLog.getText()+"Startig scanning" + ipscanAddress.getText() + "\n");
+						new Thread(new Runnable() {
+							@Override
+							public void run() {
+								scanRunning = true;
+								ipscanProgbar.setStringPainted(true);
+								ipscanProgbar.setMinimum((int)ipscanPort1.getValue());
+								ipscanProgbar.setMaximum((int)ipscanPort2.getValue());
+								for (int i = (int)ipscanPort1.getValue(); i < (int)ipscanPort2.getValue() + 1; i ++) {
+									ipscanProgbar.setValue(i);
+									scan = new Scan(ipscanAddress.getText(), 200);
+									ipscanLog.setText(ipscanLog.getText()+scan.scanPort(i));
+									if (!scanRunning)
+										break;
+								}
+								ipscanProgbar.setStringPainted(false);
+								ipscanProgbar.setMinimum(0);
+								ipscanProgbar.setMaximum(100);
+								ipscanProgbar.setValue(0);
+								scan.closeSocket();
+							}
+						}).start();
+					}
+				}
+				logConsole("Scan completed!");
+				ipscanLog.setText(ipscanLog.getText()+"Scan completed!\n\n");
+			}
+		});
+		
+		
 		JPanel settingsPanel = new JPanel();
 		tabbedPane.addTab("Settings", null, settingsPanel, null);
 		
@@ -548,18 +1038,30 @@ public class GUI extends JFrame {
 		txtrIpTools.setFont(new Font("Monospaced", Font.PLAIN, 20));
 		txtrIpTools.setBackground(UIManager.getColor("Button.background"));
 		txtrIpTools.setLineWrap(true);
-		txtrIpTools.setText("IP Tools.\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nMade by videosambo\r\nMIT licensed");
+		txtrIpTools.setText("IP Tools.\r\nVersion Beta 1.1\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nMade by videosambo\r\nMIT licensed");
 		
-		JPanel panel_2 = new JPanel();
-		tabbedPane.addTab("Console", null, panel_2, null);
-		panel_2.setLayout(new GridLayout(0, 1, 0, 0));
+		JPanel consolePanel = new JPanel();
+		consolePanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		tabbedPane.addTab("Console", null, consolePanel, null);
+		consolePanel.setLayout(new GridLayout(0, 1, 0, 0));
 		
-		JEditorPane dtrpnDawwdnajosd = new JEditorPane();
-		dtrpnDawwdnajosd.setEditable(false);
-		dtrpnDawwdnajosd.setForeground(Color.GREEN);
-		dtrpnDawwdnajosd.setBackground(Color.BLACK);
-		panel_2.add(dtrpnDawwdnajosd);
+		consoleLog = new JEditorPane();
+		consoleLog.setEditable(false);
+		consoleLog.setBackground(Color.BLACK);
+		consoleLog.setForeground(Color.GREEN);
+		consolePanel.add(consoleLog);
+		
+		
+		
+		logConsole("IP Tools Started!");
 	}
+	
+	private boolean isRunning() {
+		if (t != null)
+			return true; 
+		return false;
+	}
+	
 	private static void addPopup(Component component, final JPopupMenu popup) {
 	}
 
@@ -573,5 +1075,16 @@ public class GUI extends JFrame {
 
 	public JTextField getWhoisSearchField() {
 		return whoisSearchField;
+	}
+	
+	public GUI getInstance() {
+		return this;
+	}
+	
+	public void logConsole(String msg) {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");  
+		LocalDateTime now = LocalDateTime.now();
+		String time = "["+dtf.format(now)+"] ";
+		consoleLog.setText(consoleLog.getText() + "\n" + time + msg);
 	}
 }

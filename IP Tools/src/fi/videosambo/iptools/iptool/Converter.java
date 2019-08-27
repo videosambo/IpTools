@@ -7,7 +7,7 @@ public class Converter {
 
 	public String getDomain(String ip) {
 		try {
-			return InetAddress.getByName(ip).getHostName().toString();
+			return InetAddress.getByName(ip).getHostName();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -16,7 +16,7 @@ public class Converter {
 	
 	public String getIP(String domain) {
 		try {
-			return InetAddress.getByName(domain).toString();
+			return InetAddress.getByName(domain).getHostAddress();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}

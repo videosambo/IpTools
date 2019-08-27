@@ -17,9 +17,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-public class GetXMLData {
-	
-	private static final String url = "https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=at_ljeidY2VgHYOKZVS0Id3MNs38uw9G&domainName=";
+public class GetDNSRecordXMLData {
+
+	private static final String url = "https://www.whoisxmlapi.com/whoisserver/DNSService?apiKey=at_ljeidY2VgHYOKZVS0Id3MNs38uw9G&type=_all&domainName=";
 	
 	public String getXMLContentAsString(String address) {
 		return convertDocumentToString(getXMLContentAsDocument(address));
@@ -35,7 +35,7 @@ public class GetXMLData {
 			e1.printStackTrace();
 		}
 		try {
-			doc = builder.parse(new URL(url + address).openStream());
+			doc = builder.parse(new URL(url + address + "").openStream());
 		} catch (SAXException | IOException e) {
 			e.printStackTrace();
 		}
@@ -59,5 +59,5 @@ public class GetXMLData {
 		}
 		return null;
 	}
-
+	
 }
