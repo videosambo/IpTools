@@ -5,6 +5,8 @@ I take no responsibility for any abuse or wrong use.
 ## Download
 Jar version file: [Click here](https://github.com/videosambo/IpTools/raw/master/IPToolsJAR.jar)
 
+Executable version file: [Click here for mediafire download](https://www.mediafire.com/file/i9769ba1r8aq811/IPTools.exe/file)
+
 
 ## TODO
 - [x] Packet sender
