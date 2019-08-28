@@ -67,36 +67,33 @@ import net.boplicity.xmleditor.XmlEditorKit;
 
 public class GUI extends JFrame {
 
-	private JPanel contentPane;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
-	private JTextField booterAddressField;
-	private JTextField booterPortField;
-	private JTextField whoisSearchField;
+	private final ButtonGroup buttonGroup_1 = new ButtonGroup();
+	private final ButtonGroup buttonGroup_2 = new ButtonGroup();
 
-	private GetAddressXMLData xmldata = new GetAddressXMLData();
+	private JPanel contentPane;
+
 	private Converter coverter = new Converter();
+
 	private GetDNSRecordXMLData dnsdata = new GetDNSRecordXMLData();
+	private GetAddressXMLData xmldata = new GetAddressXMLData();
+
 	private TCPPacketSender tcpSender;
 	private UDPPacketSender udpSender;
 
-	private JTextField dnsSearchField;
-	private JTextField dtipDomainField;
-	private JTextField dtipIpField;
-	private JTextField iptdIpField;
-	private JTextField iptdDomainFIeld;
+	private JTextField booterAddressField, booterPortField, dnsSearchField, whoisSearchField, dtipDomainField,
+			dtipIpField, iptdIpField, iptdDomainFIeld, ipscanAddress;
 
-	JEditorPane consoleLog;
+	JEditorPane packetContent, whoisEditor, dnsEditor, ipscanLog;
 
 	private XmlToTree xmlToTree;
-
-	private JTextField ipscanAddress;
 	private Scan scan;
 
-	private boolean scanRunning = false;
-	private boolean booterRunning = false;
-	private final ButtonGroup buttonGroup_1 = new ButtonGroup();
-	private final ButtonGroup buttonGroup_2 = new ButtonGroup();
+	private boolean scanRunning = false, booterRunning = false;
+
 	private static JTextField settingsWHOISApiKey;
+
+	JEditorPane consoleLog;
 
 	/**
 	 * Launch the application.
@@ -126,52 +123,154 @@ public class GUI extends JFrame {
 	 * Create the frame.
 	 */
 	public GUI() {
+
 		settingsWHOISApiKey = new JTextField();
 		consoleLog = new JEditorPane();
 		settingsWHOISApiKey.setText("at_J7TntBlVBoWiwPElcLFbpdo9I30kC");
+
 		setIconImage(Toolkit.getDefaultToolkit().getImage(GUI.class.getResource("/img/iptoolsicon.png")));
 		setTitle("IP Tools");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 676, 477);
+
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
+		setContentPane(contentPane);
+
+		/*
+		 * Creating elements
+		 */
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		JTabbedPane whoisEditorPanelFrame = new JTabbedPane(JTabbedPane.TOP);
+		JTabbedPane dnsEditorPanelFrame = new JTabbedPane(JTabbedPane.TOP);
+		JPanel booterPanel = new JPanel();
+		JPanel whoIsPanel = new JPanel();
+		JPanel dnslookupPanel = new JPanel();
+		JPanel whoisTreePane = new JPanel();
+		JPanel panel_4 = new JPanel();
+		JPanel converterPanel = new JPanel();
+		JPanel dnsTreePanel = new JPanel();
+		JPanel panel_2 = new JPanel();
+		JPanel ipscannerPanel = new JPanel();
+		JPanel aboutTextFieldPanel = new JPanel();
+		JPanel consolePanel = new JPanel();
+		JPanel aboutPanel = new JPanel();
+		JPanel settingsPanel = new JPanel();
+		JMenuBar menuBar = new JMenuBar();
+		JMenuBar menuBar_2 = new JMenuBar();
+		JMenuBar menuBar_1 = new JMenuBar();
+		JLayeredPane protocolPanel = new JLayeredPane();
+		JLayeredPane targetInfoPanel = new JLayeredPane();
+		JLayeredPane packetPanel = new JLayeredPane();
+		JLayeredPane packetCountPanel = new JLayeredPane();
+		JLayeredPane layeredPane = new JLayeredPane();
+		JLayeredPane whoisSearchPanel = new JLayeredPane();
+		JLayeredPane whoisEditorPanel = new JLayeredPane();
+		JLayeredPane dnsEditorPanel = new JLayeredPane();
+		JLayeredPane dnslookupSearchPanel = new JLayeredPane();
+		JLayeredPane converterDTIPPanel = new JLayeredPane();
+		JLayeredPane converterIPTDPanel = new JLayeredPane();
+		JLayeredPane settingsLanguagePanel = new JLayeredPane();
+		JLayeredPane settingsPacketSettingsPanel = new JLayeredPane();
+		JLayeredPane settingsThemesPanel = new JLayeredPane();
+		JLayeredPane settingsAPIPanel = new JLayeredPane();
+		JLayeredPane ipscanPorts = new JLayeredPane();
+		JLayeredPane ipscanControl = new JLayeredPane();
+		JLayeredPane ipscanLogPanel = new JLayeredPane();
+		packetContent = new JEditorPane();
+		whoisEditor = new JEditorPane();
+		dnsEditor = new JEditorPane();
+		ipscanLog = new JEditorPane();
+		JMenu mnFile = new JMenu("File");
+		JMenu mnThemes = new JMenu("Themes");
+		JMenu mnLanguage = new JMenu("Language");
+		JMenuItem booterSave = new JMenuItem("Save");
+		JMenuItem booterLoad = new JMenuItem("Load");
+		JRadioButtonMenuItem rdbtnmntmLightTheme = new JRadioButtonMenuItem("Light Theme");
+		JRadioButtonMenuItem rdbtnmntmDarkTheme = new JRadioButtonMenuItem("Dark Theme");
+		JRadioButtonMenuItem rdbtnmntmEnglish = new JRadioButtonMenuItem("English");
+		JRadioButtonMenuItem rdbtnmntmFinnish = new JRadioButtonMenuItem("Finnish");
+		JSeparator booterSeparator = new JSeparator();
+		JButton booterLaunch = new JButton("Attack");
+		JButton booterSTOP = new JButton("STOP");
+		JButton whoisSearchButton = new JButton("Search");
+		JButton dnsSearchButton = new JButton("Search");
+		JButton iptdButton = new JButton("->");
+		JButton dtipButton = new JButton("->");
+		JButton ipscanButton = new JButton("Start Scanning");
+		JButton ipscanCancel = new JButton("Cancel");
+		JProgressBar booterProgbar = new JProgressBar();
+		JProgressBar ipscanProgbar = new JProgressBar();
+		GroupLayout gl_booterPanel = new GroupLayout(booterPanel);
+		GroupLayout gl_layeredPane = new GroupLayout(layeredPane);
+		GroupLayout gl_packetCountPanel = new GroupLayout(packetCountPanel);
+		GroupLayout gl_targetInfoPanel = new GroupLayout(targetInfoPanel);
+		GroupLayout gl_protocolPanel = new GroupLayout(protocolPanel);
+		GroupLayout gl_whoIsPanel = new GroupLayout(whoIsPanel);
+		GroupLayout gl_whoisSearchPanel = new GroupLayout(whoisSearchPanel);
+		GroupLayout gl_dnslookupSearchPanel = new GroupLayout(dnslookupSearchPanel);
+		GroupLayout gl_dnslookupPanel = new GroupLayout(dnslookupPanel);
+		GroupLayout gl_converterIPTDPanel = new GroupLayout(converterIPTDPanel);
+		GroupLayout gl_converterPanel = new GroupLayout(converterPanel);
+		GroupLayout gl_converterDTIPPanel = new GroupLayout(converterDTIPPanel);
+		GroupLayout gl_settingsPacketSettingsPanel = new GroupLayout(settingsPacketSettingsPanel);
+		GroupLayout gl_settingsPanel = new GroupLayout(settingsPanel);
+		GroupLayout gl_settingsAPIPanel = new GroupLayout(settingsAPIPanel);
+		GroupLayout gl_ipscannerPanel = new GroupLayout(ipscannerPanel);
+		GroupLayout gl_ipscanControl = new GroupLayout(ipscanControl);
+		GroupLayout gl_ipscanPorts = new GroupLayout(ipscanPorts);
+		JSpinner booterPacketCount = new JSpinner();
+		JSpinner ipscanPort1 = new JSpinner();
+		JSpinner ipscanPort2 = new JSpinner();
+		JSpinner settingsMaxPacketCount = new JSpinner();
+		JSlider booterSlider = new JSlider();
+		JScrollPane scrollPane = new JScrollPane();
+		JScrollPane scrollPane_1 = new JScrollPane();
+		JScrollPane whoisTreeview = new JScrollPane();
+		JScrollPane scrollPane_3 = new JScrollPane();
+		JScrollPane dnsTreeview = new JScrollPane();
+		JScrollPane scrollPane_2 = new JScrollPane();
+		JScrollPane scrollPane_4 = new JScrollPane();
+		JLabel lblIpAddress = new JLabel("IP Address");
+		JLabel lblPort = new JLabel("Port");
+		JLabel settingsMaxPackets = new JLabel("Max Packet Count");
+		JLabel lblWhoisApiKey = new JLabel("WHOIS API Key");
+		JLabel ipscanAddresLabel = new JLabel("Address");
+		JLabel lblFromPort = new JLabel("From port");
+		JLabel lblToPort = new JLabel("To port");
+		Label aboutLabel = new Label("About");
+		JRadioButton radioTCP = new JRadioButton("Transmission Control Protocol");
+		JRadioButton radioUDP = new JRadioButton("User Datagram Protocol");
+		JTextArea txtrIpTools = new JTextArea();
+		JCheckBox ipscanOpenPort = new JCheckBox("Open port");
+		JCheckBox ipscanOSDetect = new JCheckBox("OS Detect");
+
+		/*
+		 * Specifying elements
+		 */
+
 		contentPane.add(tabbedPane, BorderLayout.CENTER);
 
-		JPanel booterPanel = new JPanel();
 		tabbedPane.addTab("Booter", null, booterPanel, null);
 
-		JLayeredPane protocolPanel = new JLayeredPane();
 		protocolPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Protocol",
 				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
-		JLayeredPane targetInfoPanel = new JLayeredPane();
 		targetInfoPanel.setBorder(
 				new TitledBorder(null, "Target Infromation", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-		JLayeredPane packetPanel = new JLayeredPane();
 		packetPanel.setBorder(
 				new TitledBorder(null, "Packet Information", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-		JLayeredPane packetCountPanel = new JLayeredPane();
 		packetCountPanel
 				.setBorder(new TitledBorder(null, "Packet Count", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-		JSeparator booterSeparator = new JSeparator();
-
-		JButton booterLaunch = new JButton("Attack");
 		booterLaunch.setToolTipText("Start sending packets");
 
-		JProgressBar booterProgbar = new JProgressBar();
-
-		JLayeredPane layeredPane = new JLayeredPane();
 		layeredPane.setBorder(null);
 
-		JButton booterSTOP = new JButton("STOP");
-		GroupLayout gl_booterPanel = new GroupLayout(booterPanel);
 		gl_booterPanel.setHorizontalGroup(gl_booterPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_booterPanel.createSequentialGroup().addGap(35)
 						.addGroup(gl_booterPanel.createParallelGroup(Alignment.LEADING)
@@ -219,6 +318,529 @@ public class GUI extends JFrame {
 								GroupLayout.PREFERRED_SIZE))
 				.addContainerGap()));
 
+		menuBar.add(mnFile);
+
+		mnFile.add(booterSave);
+
+		mnFile.add(booterLoad);
+		gl_layeredPane.setHorizontalGroup(gl_layeredPane.createParallelGroup(Alignment.LEADING).addComponent(menuBar,
+				GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE));
+		gl_layeredPane.setVerticalGroup(gl_layeredPane.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_layeredPane.createSequentialGroup()
+						.addComponent(menuBar, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+						.addGap(1)));
+		layeredPane.setLayout(gl_layeredPane);
+		booterPacketCount.setToolTipText("You can adjust packet count here");
+
+		booterSlider.setToolTipText("Packet count to send, do not use 0 or it will not work");
+		booterSlider.setValue(1);
+		booterSlider.setMinimum(-1);
+		booterSlider.setMinorTickSpacing(50000);
+		booterSlider.setPaintTicks(true);
+		booterSlider.setMaximum(1000000);
+		gl_packetCountPanel.setHorizontalGroup(gl_packetCountPanel.createParallelGroup(Alignment.LEADING)
+				.addComponent(booterSlider, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
+				.addGroup(gl_packetCountPanel.createSequentialGroup().addGap(12)
+						.addComponent(booterPacketCount, GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE).addGap(12)));
+		gl_packetCountPanel.setVerticalGroup(gl_packetCountPanel.createParallelGroup(Alignment.LEADING).addGroup(
+				Alignment.TRAILING,
+				gl_packetCountPanel.createSequentialGroup().addContainerGap()
+						.addComponent(booterPacketCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(ComponentPlacement.RELATED, 49, Short.MAX_VALUE)
+						.addComponent(booterSlider, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE)));
+		packetCountPanel.setLayout(gl_packetCountPanel);
+		packetPanel.setLayout(new GridLayout(1, 0, 0, 0));
+
+		packetPanel.add(scrollPane);
+		packetContent.setFont(new Font("Monospaced", Font.PLAIN, 16));
+		packetContent.setToolTipText("Type here content of your packet");
+		scrollPane.setViewportView(packetContent);
+
+		booterAddressField = new JTextField();
+		booterAddressField.setToolTipText("Here you can enter ip or domain name");
+		booterAddressField.setColumns(10);
+
+		booterPortField = new JTextField();
+		booterPortField.setToolTipText("port of ip");
+		booterPortField.setColumns(10);
+		gl_targetInfoPanel.setHorizontalGroup(gl_targetInfoPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_targetInfoPanel.createSequentialGroup().addContainerGap().addGroup(gl_targetInfoPanel
+						.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_targetInfoPanel.createSequentialGroup().addComponent(lblIpAddress).addGap(18)
+								.addComponent(booterAddressField, GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE))
+						.addGroup(gl_targetInfoPanel.createSequentialGroup().addComponent(lblPort).addGap(18)
+								.addComponent(booterPortField, GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)))
+						.addContainerGap()));
+		gl_targetInfoPanel.setVerticalGroup(gl_targetInfoPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_targetInfoPanel.createSequentialGroup().addGap(5)
+						.addGroup(gl_targetInfoPanel.createParallelGroup(Alignment.BASELINE)
+								.addComponent(booterAddressField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.PREFERRED_SIZE)
+								.addComponent(lblIpAddress))
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addGroup(gl_targetInfoPanel.createParallelGroup(Alignment.BASELINE).addComponent(lblPort)
+								.addComponent(booterPortField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.PREFERRED_SIZE))
+						.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+		targetInfoPanel.setLayout(gl_targetInfoPanel);
+
+		radioTCP.setToolTipText("TCP");
+		radioTCP.setSelected(true);
+		buttonGroup.add(radioTCP);
+
+		radioUDP.setToolTipText("UDP");
+		buttonGroup.add(radioUDP);
+		gl_protocolPanel.setHorizontalGroup(gl_protocolPanel.createParallelGroup(Alignment.LEADING)
+				.addComponent(radioTCP, GroupLayout.PREFERRED_SIZE, 233, GroupLayout.PREFERRED_SIZE)
+				.addComponent(radioUDP, GroupLayout.PREFERRED_SIZE, 233, GroupLayout.PREFERRED_SIZE));
+		gl_protocolPanel.setVerticalGroup(gl_protocolPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_protocolPanel.createSequentialGroup()
+						.addComponent(radioTCP, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
+						.addComponent(radioUDP, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)));
+		protocolPanel.setLayout(gl_protocolPanel);
+		booterPanel.setLayout(gl_booterPanel);
+
+		tabbedPane.addTab("WHOIS", null, whoIsPanel, null);
+
+		whoisSearchPanel.setToolTipText("You can search ip's and domain names");
+		whoisSearchPanel
+				.setBorder(new TitledBorder(null, "Search WhoIs", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		whoisEditorPanel
+				.setBorder(new TitledBorder(null, "Editor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		gl_whoIsPanel.setHorizontalGroup(gl_whoIsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING, gl_whoIsPanel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_whoIsPanel.createParallelGroup(Alignment.TRAILING)
+								.addComponent(whoisEditorPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 619,
+										Short.MAX_VALUE)
+								.addComponent(whoisSearchPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 619,
+										Short.MAX_VALUE))
+						.addContainerGap()));
+		gl_whoIsPanel.setVerticalGroup(gl_whoIsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_whoIsPanel.createSequentialGroup().addContainerGap()
+						.addComponent(whoisSearchPanel, GroupLayout.PREFERRED_SIZE, 66, GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addComponent(whoisEditorPanel, GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE)
+						.addContainerGap()));
+		whoisEditorPanel.setLayout(new GridLayout(1, 0, 0, 0));
+
+		whoisEditorPanel.add(whoisEditorPanelFrame);
+
+		whoisEditorPanelFrame.addTab("Editor", null, panel_2, null);
+		panel_2.setLayout(new GridLayout(0, 1, 0, 0));
+
+		panel_2.add(scrollPane_1);
+
+		scrollPane_1.setViewportView(whoisEditor);
+		whoisEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
+
+		whoisEditorPanelFrame.addTab("Tree View", null, whoisTreePane, null);
+		whoisTreePane.setLayout(new GridLayout(0, 1, 0, 0));
+
+		whoisTreePane.add(whoisTreeview);
+
+		whoisSearchField = new JTextField();
+		whoisSearchField.setColumns(10);
+
+		gl_whoisSearchPanel.setHorizontalGroup(gl_whoisSearchPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_whoisSearchPanel.createSequentialGroup().addGap(12)
+						.addComponent(whoisSearchField, GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE).addGap(12)
+						.addComponent(whoisSearchButton, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
+						.addGap(6)));
+
+		gl_whoisSearchPanel.setVerticalGroup(gl_whoisSearchPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_whoisSearchPanel.createSequentialGroup().addGap(7)
+						.addGroup(gl_whoisSearchPanel.createParallelGroup(Alignment.LEADING)
+								.addComponent(whoisSearchField, GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
+								.addGroup(gl_whoisSearchPanel.createSequentialGroup()
+										.addComponent(whoisSearchButton, GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
+										.addGap(1)))
+						.addGap(6)));
+		whoisSearchPanel.setLayout(gl_whoisSearchPanel);
+		whoIsPanel.setLayout(gl_whoIsPanel);
+
+		tabbedPane.addTab("DNS Lookup", null, dnslookupPanel, null);
+
+		dnslookupSearchPanel.setToolTipText("You can search ip's and domain names");
+		dnslookupSearchPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+				"Search DNS Records", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+
+		dnsSearchField = new JTextField();
+		dnsSearchField.setColumns(10);
+
+		gl_dnslookupSearchPanel.setHorizontalGroup(gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
+				.addGap(0, 619, Short.MAX_VALUE)
+				.addGroup(gl_dnslookupSearchPanel.createSequentialGroup().addGap(12)
+						.addComponent(dnsSearchField, GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE).addGap(12)
+						.addComponent(dnsSearchButton, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
+						.addGap(6)));
+
+		gl_dnslookupSearchPanel.setVerticalGroup(gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
+				.addGap(0, 66, Short.MAX_VALUE)
+				.addGroup(gl_dnslookupSearchPanel.createSequentialGroup().addGap(7)
+						.addGroup(gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
+								.addComponent(dnsSearchField, GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
+								.addGroup(gl_dnslookupSearchPanel.createSequentialGroup()
+										.addComponent(dnsSearchButton, GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
+										.addGap(1)))
+						.addGap(6)));
+		dnslookupSearchPanel.setLayout(gl_dnslookupSearchPanel);
+
+		dnsEditorPanel.setBorder(new TitledBorder(null, "Editor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		dnsEditorPanel.setLayout(new GridLayout(1, 0, 0, 0));
+		gl_dnslookupPanel.setHorizontalGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_dnslookupPanel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
+								.addComponent(dnslookupSearchPanel, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE)
+								.addComponent(dnsEditorPanel, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE))
+						.addContainerGap()));
+		gl_dnslookupPanel.setVerticalGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_dnslookupPanel.createSequentialGroup().addContainerGap()
+						.addComponent(dnslookupSearchPanel, GroupLayout.PREFERRED_SIZE, 66, GroupLayout.PREFERRED_SIZE)
+						.addGap(7).addComponent(dnsEditorPanel, GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE)
+						.addContainerGap()));
+
+		dnsEditorPanel.add(dnsEditorPanelFrame);
+
+		dnsEditorPanelFrame.addTab("Editor", null, panel_4, null);
+		panel_4.setLayout(new GridLayout(0, 1, 0, 0));
+
+		panel_4.add(scrollPane_3);
+
+		dnsEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
+		scrollPane_3.setViewportView(dnsEditor);
+
+		dnsEditorPanelFrame.addTab("Tree View", null, dnsTreePanel, null);
+		dnsTreePanel.setLayout(new GridLayout(0, 1, 0, 0));
+		dnslookupPanel.setLayout(gl_dnslookupPanel);
+
+		dnsTreePanel.add(dnsTreeview);
+
+		tabbedPane.addTab("Converter", null, converterPanel, "Here you can convert ip to domain and domain to ip");
+
+		converterDTIPPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+				"Domain to IP converter", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+
+		converterIPTDPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+				"IP to Domain coverter", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+
+		iptdIpField = new JTextField();
+		iptdIpField.setColumns(10);
+
+		iptdDomainFIeld = new JTextField();
+		iptdDomainFIeld.setColumns(10);
+		gl_converterIPTDPanel.setHorizontalGroup(gl_converterIPTDPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_converterIPTDPanel.createSequentialGroup().addContainerGap()
+						.addComponent(iptdIpField, GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addComponent(iptdButton, GroupLayout.DEFAULT_SIZE, 94, Short.MAX_VALUE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addComponent(iptdDomainFIeld, GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE)
+						.addContainerGap()));
+		gl_converterIPTDPanel.setVerticalGroup(gl_converterIPTDPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING,
+						gl_converterIPTDPanel.createSequentialGroup().addGap(25)
+								.addGroup(gl_converterIPTDPanel.createParallelGroup(Alignment.BASELINE)).addGap(25))
+				.addGroup(gl_converterIPTDPanel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_converterIPTDPanel.createParallelGroup(Alignment.BASELINE)
+								.addComponent(iptdIpField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.PREFERRED_SIZE)
+								.addComponent(iptdDomainFIeld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.PREFERRED_SIZE)
+								.addComponent(iptdButton))
+						.addContainerGap(40, Short.MAX_VALUE)));
+		converterIPTDPanel.setLayout(gl_converterIPTDPanel);
+		gl_converterPanel.setHorizontalGroup(gl_converterPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING, gl_converterPanel.createSequentialGroup().addGap(79)
+						.addGroup(gl_converterPanel.createParallelGroup(Alignment.TRAILING)
+								.addComponent(converterIPTDPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 493,
+										Short.MAX_VALUE)
+								.addComponent(converterDTIPPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 359,
+										Short.MAX_VALUE))
+						.addGap(71)));
+		gl_converterPanel.setVerticalGroup(gl_converterPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_converterPanel.createSequentialGroup().addGap(65)
+						.addComponent(converterDTIPPanel, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addComponent(converterIPTDPanel, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
+						.addContainerGap(158, Short.MAX_VALUE)));
+
+		dtipDomainField = new JTextField();
+		dtipDomainField.setColumns(10);
+
+		dtipIpField = new JTextField();
+		dtipIpField.setColumns(10);
+		gl_converterDTIPPanel.setHorizontalGroup(gl_converterDTIPPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_converterDTIPPanel.createSequentialGroup().addContainerGap()
+						.addComponent(dtipDomainField, GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE).addGap(12)
+						.addComponent(dtipButton, GroupLayout.DEFAULT_SIZE, 51, Short.MAX_VALUE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addComponent(dtipIpField, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE).addContainerGap()));
+		gl_converterDTIPPanel.setVerticalGroup(gl_converterDTIPPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_converterDTIPPanel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_converterDTIPPanel.createParallelGroup(Alignment.BASELINE, false)
+								.addComponent(dtipDomainField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.PREFERRED_SIZE)
+								.addComponent(dtipButton).addComponent(dtipIpField, GroupLayout.PREFERRED_SIZE,
+										GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addGap(40)));
+		converterDTIPPanel.setLayout(gl_converterDTIPPanel);
+		converterPanel.setLayout(gl_converterPanel);
+
+		tabbedPane.addTab("IP Scanner", null, ipscannerPanel, null);
+
+		ipscanPorts.setBorder(new TitledBorder(null, "Port range", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		ipscanControl
+				.setBorder(new TitledBorder(null, "Control Panel", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		ipscanLogPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+
+		gl_ipscannerPanel
+				.setHorizontalGroup(gl_ipscannerPanel.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_ipscannerPanel.createSequentialGroup().addContainerGap()
+								.addGroup(gl_ipscannerPanel.createParallelGroup(Alignment.LEADING)
+										.addComponent(ipscanPorts, GroupLayout.PREFERRED_SIZE, 285,
+												GroupLayout.PREFERRED_SIZE)
+										.addComponent(ipscanControl, GroupLayout.PREFERRED_SIZE, 285,
+												GroupLayout.PREFERRED_SIZE))
+								.addPreferredGap(ComponentPlacement.UNRELATED)
+								.addComponent(ipscanLogPanel, GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE)
+								.addContainerGap()));
+		gl_ipscannerPanel.setVerticalGroup(gl_ipscannerPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_ipscannerPanel.createSequentialGroup().addGap(40).addGroup(gl_ipscannerPanel
+						.createParallelGroup(Alignment.LEADING)
+						.addComponent(ipscanLogPanel, GroupLayout.DEFAULT_SIZE, 337, Short.MAX_VALUE)
+						.addGroup(gl_ipscannerPanel.createSequentialGroup()
+								.addComponent(ipscanPorts, GroupLayout.PREFERRED_SIZE, 80, GroupLayout.PREFERRED_SIZE)
+								.addPreferredGap(ComponentPlacement.UNRELATED)
+								.addComponent(ipscanControl, GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)))
+						.addContainerGap()));
+		ipscanLogPanel.setLayout(new GridLayout(1, 0, 0, 0));
+
+		ipscanLogPanel.add(scrollPane_4);
+
+		scrollPane_4.setViewportView(ipscanLog);
+		ipscanLog.setEditable(false);
+		ipscanLog.setForeground(Color.GREEN);
+		ipscanLog.setBackground(Color.BLACK);
+
+		ipscanOSDetect.setEnabled(false);
+
+		ipscanAddress = new JTextField();
+		ipscanAddress.setColumns(10);
+
+		gl_ipscanControl
+				.setHorizontalGroup(gl_ipscanControl.createParallelGroup(Alignment.TRAILING)
+						.addGroup(gl_ipscanControl.createSequentialGroup().addGap(6)
+								.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+										.addComponent(ipscanOpenPort, GroupLayout.PREFERRED_SIZE, 113,
+												GroupLayout.PREFERRED_SIZE)
+										.addComponent(ipscanOSDetect, GroupLayout.PREFERRED_SIZE, 113,
+												GroupLayout.PREFERRED_SIZE))
+								.addGap(8)
+								.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+										.addComponent(ipscanProgbar, GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
+										.addComponent(ipscanButton, GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE))
+								.addGap(6))
+						.addGroup(gl_ipscanControl.createSequentialGroup().addContainerGap()
+								.addComponent(ipscanAddress, GroupLayout.DEFAULT_SIZE, 249, Short.MAX_VALUE)
+								.addContainerGap())
+						.addGroup(gl_ipscanControl.createSequentialGroup().addContainerGap()
+								.addComponent(ipscanAddresLabel, GroupLayout.PREFERRED_SIZE, 56,
+										GroupLayout.PREFERRED_SIZE)
+								.addContainerGap(205, Short.MAX_VALUE))
+						.addGroup(Alignment.LEADING,
+								gl_ipscanControl
+										.createSequentialGroup().addGap(190).addComponent(ipscanCancel,
+												GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+										.addContainerGap()));
+		gl_ipscanControl.setVerticalGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_ipscanControl.createSequentialGroup()
+						.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
+								.addGroup(gl_ipscanControl.createSequentialGroup().addGap(12)
+										.addComponent(ipscanOpenPort).addGap(5).addComponent(ipscanOSDetect)
+										.addPreferredGap(ComponentPlacement.RELATED, 91, Short.MAX_VALUE)
+										.addComponent(ipscanAddresLabel))
+								.addGroup(
+										gl_ipscanControl.createSequentialGroup()
+												.addComponent(ipscanButton, GroupLayout.PREFERRED_SIZE, 49,
+														GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(ipscanProgbar, GroupLayout.PREFERRED_SIZE, 31,
+														GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.RELATED).addComponent(ipscanCancel,
+														GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addComponent(ipscanAddress, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
+						.addContainerGap()));
+		ipscanControl.setLayout(gl_ipscanControl);
+
+		gl_ipscanPorts.setHorizontalGroup(gl_ipscanPorts.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_ipscanPorts.createSequentialGroup().addGap(33)
+						.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.TRAILING)
+								.addComponent(ipscanPort1, GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE)
+								.addGroup(gl_ipscanPorts.createSequentialGroup().addGap(35).addComponent(lblFromPort,
+										GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+						.addGap(7)
+						.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.TRAILING)
+								.addComponent(ipscanPort2, GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE)
+								.addGroup(gl_ipscanPorts.createSequentialGroup().addGap(50).addComponent(lblToPort,
+										GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+						.addGap(49)));
+		gl_ipscanPorts.setVerticalGroup(gl_ipscanPorts.createParallelGroup(Alignment.LEADING).addGroup(gl_ipscanPorts
+				.createSequentialGroup()
+				.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.BASELINE).addComponent(lblToPort)
+						.addComponent(lblFromPort, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+				.addPreferredGap(ComponentPlacement.RELATED).addGroup(gl_ipscanPorts
+						.createParallelGroup(Alignment.BASELINE).addComponent(ipscanPort1).addComponent(ipscanPort2))
+				.addGap(10)));
+		ipscanPorts.setLayout(gl_ipscanPorts);
+		ipscannerPanel.setLayout(gl_ipscannerPanel);
+
+		tabbedPane.addTab("About", null, aboutPanel, null);
+		aboutPanel.setLayout(new BorderLayout(0, 0));
+
+		aboutLabel.setAlignment(Label.CENTER);
+		aboutLabel.setFont(new Font("Dialog", Font.PLAIN, 30));
+		aboutPanel.add(aboutLabel, BorderLayout.NORTH);
+
+		aboutPanel.add(aboutTextFieldPanel, BorderLayout.CENTER);
+		aboutTextFieldPanel.setLayout(new GridLayout(0, 1, 0, 0));
+
+		aboutTextFieldPanel.add(scrollPane_2);
+
+		scrollPane_2.setViewportView(txtrIpTools);
+		txtrIpTools.setEditable(false);
+		txtrIpTools.setFont(new Font("Monospaced", Font.PLAIN, 20));
+		txtrIpTools.setBackground(UIManager.getColor("Button.background"));
+		txtrIpTools.setLineWrap(true);
+		txtrIpTools.setText(
+				"IP Tools.\r\nVersion Beta 1.2\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nThere is still plenty of features that are not avaible yet, but they will be soon!\r\nMade by videosambo\r\nMIT licensed");
+
+		tabbedPane.addTab("Settings", null, settingsPanel, null);
+
+		settingsLanguagePanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Languages",
+				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+
+		settingsPacketSettingsPanel.setBorder(
+				new TitledBorder(null, "PacketSettings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		settingsThemesPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Themes",
+				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+
+		settingsAPIPanel
+				.setBorder(new TitledBorder(null, "API Key", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+
+		gl_settingsPanel.setHorizontalGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPanel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+								.addComponent(settingsPacketSettingsPanel, GroupLayout.PREFERRED_SIZE, 168,
+										GroupLayout.PREFERRED_SIZE)
+								.addGroup(gl_settingsPanel.createSequentialGroup()
+										.addComponent(settingsLanguagePanel, GroupLayout.PREFERRED_SIZE, 168,
+												GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.UNRELATED)
+										.addComponent(settingsThemesPanel, GroupLayout.PREFERRED_SIZE, 182,
+												GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED).addComponent(settingsAPIPanel,
+												GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)))
+						.addContainerGap()));
+		gl_settingsPanel.setVerticalGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPanel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_settingsPanel.createParallelGroup(Alignment.TRAILING, false)
+								.addComponent(settingsAPIPanel, Alignment.LEADING)
+								.addComponent(settingsLanguagePanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 105,
+										Short.MAX_VALUE)
+								.addComponent(settingsThemesPanel, Alignment.LEADING))
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addComponent(settingsPacketSettingsPanel, GroupLayout.DEFAULT_SIZE, 246, Short.MAX_VALUE)
+						.addContainerGap()));
+
+		logConsole("Using APIKEY '" + settingsWHOISApiKey.getText() + "'");
+		settingsWHOISApiKey.setToolTipText("Enter whois api key here if you want to use whois and dns lookput");
+		settingsWHOISApiKey.setColumns(10);
+
+		lblWhoisApiKey.setToolTipText("My api key can run out of uses so you can enter your own");
+		gl_settingsAPIPanel
+				.setHorizontalGroup(
+						gl_settingsAPIPanel.createParallelGroup(Alignment.LEADING)
+								.addGroup(gl_settingsAPIPanel.createSequentialGroup().addContainerGap()
+										.addGroup(gl_settingsAPIPanel.createParallelGroup(Alignment.LEADING)
+												.addComponent(settingsWHOISApiKey, GroupLayout.DEFAULT_SIZE, 214,
+														Short.MAX_VALUE)
+												.addComponent(lblWhoisApiKey))
+										.addContainerGap()));
+		gl_settingsAPIPanel.setVerticalGroup(gl_settingsAPIPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsAPIPanel.createSequentialGroup().addContainerGap().addComponent(lblWhoisApiKey)
+						.addPreferredGap(ComponentPlacement.RELATED).addComponent(settingsWHOISApiKey,
+								GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addContainerGap(29, Short.MAX_VALUE)));
+		settingsAPIPanel.setLayout(gl_settingsAPIPanel);
+		settingsThemesPanel.setLayout(null);
+
+		menuBar_2.setBounds(28, 43, 119, 26);
+		settingsThemesPanel.add(menuBar_2);
+
+		menuBar_2.add(mnThemes);
+
+		buttonGroup_2.add(rdbtnmntmLightTheme);
+		rdbtnmntmLightTheme.setSelected(true);
+		mnThemes.add(rdbtnmntmLightTheme);
+
+		rdbtnmntmDarkTheme.setEnabled(false);
+		buttonGroup_2.add(rdbtnmntmDarkTheme);
+		mnThemes.add(rdbtnmntmDarkTheme);
+		settingsLanguagePanel.setLayout(null);
+
+		menuBar_1.setBounds(23, 43, 119, 26);
+		settingsLanguagePanel.add(menuBar_1);
+
+		menuBar_1.add(mnLanguage);
+
+		buttonGroup_1.add(rdbtnmntmEnglish);
+		rdbtnmntmEnglish.setSelected(true);
+		mnLanguage.add(rdbtnmntmEnglish);
+
+		buttonGroup_1.add(rdbtnmntmFinnish);
+		rdbtnmntmFinnish.setEnabled(false);
+		mnLanguage.add(rdbtnmntmFinnish);
+
+		settingsMaxPacketCount.setEnabled(false);
+		settingsMaxPacketCount.setModel(new SpinnerNumberModel(new Integer(1000000), null, null, new Integer(1)));
+
+		gl_settingsPacketSettingsPanel.setHorizontalGroup(gl_settingsPacketSettingsPanel
+				.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPacketSettingsPanel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_settingsPacketSettingsPanel.createParallelGroup(Alignment.LEADING)
+								.addComponent(settingsMaxPackets, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 144,
+										Short.MAX_VALUE)
+								.addComponent(settingsMaxPacketCount, GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE))
+						.addContainerGap()));
+		gl_settingsPacketSettingsPanel
+				.setVerticalGroup(gl_settingsPacketSettingsPanel.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_settingsPacketSettingsPanel.createSequentialGroup().addContainerGap()
+								.addComponent(settingsMaxPackets).addPreferredGap(ComponentPlacement.RELATED)
+								.addComponent(settingsMaxPacketCount, GroupLayout.PREFERRED_SIZE,
+										GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+								.addContainerGap(163, Short.MAX_VALUE)));
+		settingsPacketSettingsPanel.setLayout(gl_settingsPacketSettingsPanel);
+		settingsPanel.setLayout(gl_settingsPanel);
+
+		consolePanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		tabbedPane.addTab("Console", null, consolePanel, null);
+		consolePanel.setLayout(new GridLayout(0, 1, 0, 0));
+
+		consoleLog.setEditable(false);
+		consoleLog.setBackground(Color.BLACK);
+		consoleLog.setForeground(Color.GREEN);
+		consolePanel.add(consoleLog);
+
+		/*
+		 * Events
+		 */
+
 		booterSTOP.addActionListener(new ActionListener() {
 
 			@Override
@@ -232,16 +854,6 @@ public class GUI extends JFrame {
 			}
 		});
 
-		JMenuBar menuBar = new JMenuBar();
-
-		JMenu mnFile = new JMenu("File");
-		menuBar.add(mnFile);
-
-		JSpinner booterPacketCount = new JSpinner();
-
-		JEditorPane packetContent = new JEditorPane();
-
-		JMenuItem booterSave = new JMenuItem("Save");
 		booterSave.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -270,9 +882,7 @@ public class GUI extends JFrame {
 				}
 			}
 		});
-		mnFile.add(booterSave);
 
-		JMenuItem booterLoad = new JMenuItem("Load");
 		booterLoad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser();
@@ -308,38 +918,6 @@ public class GUI extends JFrame {
 				}
 			}
 		});
-		mnFile.add(booterLoad);
-		GroupLayout gl_layeredPane = new GroupLayout(layeredPane);
-		gl_layeredPane.setHorizontalGroup(gl_layeredPane.createParallelGroup(Alignment.LEADING).addComponent(menuBar,
-				GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE));
-		gl_layeredPane.setVerticalGroup(gl_layeredPane.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_layeredPane.createSequentialGroup()
-						.addComponent(menuBar, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addGap(1)));
-		layeredPane.setLayout(gl_layeredPane);
-		booterPacketCount.setToolTipText("You can adjust packet count here");
-
-		JSlider booterSlider = new JSlider();
-		booterSlider.setToolTipText("Packet count to send, do not use 0 or it will not work");
-		booterSlider.setValue(1);
-		booterSlider.setMinimum(-1);
-		booterSlider.setMinorTickSpacing(50000);
-		booterSlider.setPaintTicks(true);
-		booterSlider.setMaximum(1000000);
-		GroupLayout gl_packetCountPanel = new GroupLayout(packetCountPanel);
-		gl_packetCountPanel.setHorizontalGroup(gl_packetCountPanel.createParallelGroup(Alignment.LEADING)
-				.addComponent(booterSlider, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
-				.addGroup(gl_packetCountPanel.createSequentialGroup().addGap(12)
-						.addComponent(booterPacketCount, GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE).addGap(12)));
-		gl_packetCountPanel.setVerticalGroup(gl_packetCountPanel.createParallelGroup(Alignment.LEADING).addGroup(
-				Alignment.TRAILING,
-				gl_packetCountPanel.createSequentialGroup().addContainerGap()
-						.addComponent(booterPacketCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addPreferredGap(ComponentPlacement.RELATED, 49, Short.MAX_VALUE)
-						.addComponent(booterSlider, GroupLayout.PREFERRED_SIZE, 51, GroupLayout.PREFERRED_SIZE)));
-		packetCountPanel.setLayout(gl_packetCountPanel);
-		packetPanel.setLayout(new GridLayout(1, 0, 0, 0));
 
 		booterSlider.addChangeListener(new ChangeListener() {
 
@@ -360,63 +938,28 @@ public class GUI extends JFrame {
 			}
 		});
 
-		JScrollPane scrollPane = new JScrollPane();
-		packetPanel.add(scrollPane);
-		packetContent.setFont(new Font("Monospaced", Font.PLAIN, 16));
-		packetContent.setToolTipText("Type here content of your packet");
-		scrollPane.setViewportView(packetContent);
+		dnsSearchButton.addActionListener(new ActionListener() {
 
-		JLabel lblIpAddress = new JLabel("IP Address");
-
-		booterAddressField = new JTextField();
-		booterAddressField.setToolTipText("Here you can enter ip or domain name");
-		booterAddressField.setColumns(10);
-
-		JLabel lblPort = new JLabel("Port");
-
-		booterPortField = new JTextField();
-		booterPortField.setToolTipText("port of ip");
-		booterPortField.setColumns(10);
-		GroupLayout gl_targetInfoPanel = new GroupLayout(targetInfoPanel);
-		gl_targetInfoPanel.setHorizontalGroup(gl_targetInfoPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_targetInfoPanel.createSequentialGroup().addContainerGap().addGroup(gl_targetInfoPanel
-						.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_targetInfoPanel.createSequentialGroup().addComponent(lblIpAddress).addGap(18)
-								.addComponent(booterAddressField, GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE))
-						.addGroup(gl_targetInfoPanel.createSequentialGroup().addComponent(lblPort).addGap(18)
-								.addComponent(booterPortField, GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)))
-						.addContainerGap()));
-		gl_targetInfoPanel.setVerticalGroup(gl_targetInfoPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_targetInfoPanel.createSequentialGroup().addGap(5)
-						.addGroup(gl_targetInfoPanel.createParallelGroup(Alignment.BASELINE)
-								.addComponent(booterAddressField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.PREFERRED_SIZE)
-								.addComponent(lblIpAddress))
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addGroup(gl_targetInfoPanel.createParallelGroup(Alignment.BASELINE).addComponent(lblPort)
-								.addComponent(booterPortField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.PREFERRED_SIZE))
-						.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
-		targetInfoPanel.setLayout(gl_targetInfoPanel);
-
-		JRadioButton radioTCP = new JRadioButton("Transmission Control Protocol");
-		radioTCP.setToolTipText("TCP");
-		radioTCP.setSelected(true);
-		buttonGroup.add(radioTCP);
-
-		JRadioButton radioUDP = new JRadioButton("User Datagram Protocol");
-		radioUDP.setToolTipText("UDP");
-		buttonGroup.add(radioUDP);
-		GroupLayout gl_protocolPanel = new GroupLayout(protocolPanel);
-		gl_protocolPanel.setHorizontalGroup(gl_protocolPanel.createParallelGroup(Alignment.LEADING)
-				.addComponent(radioTCP, GroupLayout.PREFERRED_SIZE, 233, GroupLayout.PREFERRED_SIZE)
-				.addComponent(radioUDP, GroupLayout.PREFERRED_SIZE, 233, GroupLayout.PREFERRED_SIZE));
-		gl_protocolPanel.setVerticalGroup(gl_protocolPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_protocolPanel.createSequentialGroup()
-						.addComponent(radioTCP, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
-						.addComponent(radioUDP, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)));
-		protocolPanel.setLayout(gl_protocolPanel);
-		booterPanel.setLayout(gl_booterPanel);
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				logConsole("Starting searching dns information of " + dnsSearchField.getText());
+				dnsEditor.setEditorKitForContentType("text/xml", new XmlEditorKit());
+				dnsEditor.setContentType("text/xml");
+				dnsEditor.setText(dnsdata.getXMLContentAsString(dnsSearchField.getText()));
+				xmlToTree = new XmlToTree(dnsdata.getXMLContentAsDocument(dnsSearchField.getText()));
+				if (xmlToTree.show() == null) {
+					logConsole("ERROR: Tree not defined!");
+					return;
+				}
+				JTree dnsXMLTree = xmlToTree.show();
+				dnsTreeview.setViewportView(dnsXMLTree);
+				dnsXMLTree.setVisible(true);
+				xmlToTree.expandAllNodes();
+				dnsXMLTree = xmlToTree.show();
+				dnsTreePanel.add(dnsTreeview);
+				logConsole("Searching completed!");
+			}
+		});
 
 		booterLaunch.addActionListener(new ActionListener() {
 			@Override
@@ -516,66 +1059,6 @@ public class GUI extends JFrame {
 			}
 		});
 
-		JPanel whoIsPanel = new JPanel();
-		tabbedPane.addTab("WHOIS", null, whoIsPanel, null);
-
-		JLayeredPane whoisSearchPanel = new JLayeredPane();
-		whoisSearchPanel.setToolTipText("You can search ip's and domain names");
-		whoisSearchPanel
-				.setBorder(new TitledBorder(null, "Search WhoIs", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-		JLayeredPane whoisEditorPanel = new JLayeredPane();
-		whoisEditorPanel
-				.setBorder(new TitledBorder(null, "Editor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		GroupLayout gl_whoIsPanel = new GroupLayout(whoIsPanel);
-		gl_whoIsPanel.setHorizontalGroup(gl_whoIsPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(Alignment.TRAILING, gl_whoIsPanel.createSequentialGroup().addContainerGap()
-						.addGroup(gl_whoIsPanel.createParallelGroup(Alignment.TRAILING)
-								.addComponent(whoisEditorPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 619,
-										Short.MAX_VALUE)
-								.addComponent(whoisSearchPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 619,
-										Short.MAX_VALUE))
-						.addContainerGap()));
-		gl_whoIsPanel.setVerticalGroup(gl_whoIsPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_whoIsPanel.createSequentialGroup().addContainerGap()
-						.addComponent(whoisSearchPanel, GroupLayout.PREFERRED_SIZE, 66, GroupLayout.PREFERRED_SIZE)
-						.addPreferredGap(ComponentPlacement.RELATED)
-						.addComponent(whoisEditorPanel, GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE)
-						.addContainerGap()));
-		whoisEditorPanel.setLayout(new GridLayout(1, 0, 0, 0));
-
-		JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.TOP);
-		whoisEditorPanel.add(tabbedPane_1);
-
-		JPanel panel_2 = new JPanel();
-		tabbedPane_1.addTab("Editor", null, panel_2, null);
-		panel_2.setLayout(new GridLayout(0, 1, 0, 0));
-
-		JScrollPane scrollPane_1 = new JScrollPane();
-		panel_2.add(scrollPane_1);
-
-		JEditorPane whoisEditor = new JEditorPane();
-		scrollPane_1.setViewportView(whoisEditor);
-		whoisEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
-
-		JPanel whoisTreePane = new JPanel();
-		tabbedPane_1.addTab("Tree View", null, whoisTreePane, null);
-		whoisTreePane.setLayout(new GridLayout(0, 1, 0, 0));
-
-		JScrollPane scrollPane_5 = new JScrollPane();
-		whoisTreePane.add(scrollPane_5);
-
-		whoisSearchField = new JTextField();
-		whoisSearchField.setColumns(10);
-
-		JButton whoisSearchButton = new JButton("Search");
-		GroupLayout gl_whoisSearchPanel = new GroupLayout(whoisSearchPanel);
-		gl_whoisSearchPanel.setHorizontalGroup(gl_whoisSearchPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_whoisSearchPanel.createSequentialGroup().addGap(12)
-						.addComponent(whoisSearchField, GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE).addGap(12)
-						.addComponent(whoisSearchButton, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
-						.addGap(6)));
-
 		whoisSearchButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -584,141 +1067,20 @@ public class GUI extends JFrame {
 				whoisEditor.setEditorKitForContentType("text/xml", new XmlEditorKit());
 				whoisEditor.setContentType("text/xml");
 				whoisEditor.setText(xmldata.getXMLContentAsString(whoisSearchField.getText()));
-				// TODO
 				xmlToTree = new XmlToTree(xmldata.getXMLContentAsDocument(whoisSearchField.getText()));
 				if (xmlToTree.show() == null) {
 					logConsole("ERROR: Tree not defined!");
 					return;
 				}
 				JTree whoisXMLTree = xmlToTree.show();
-				scrollPane_5.setViewportView(whoisXMLTree);
+				whoisTreeview.setViewportView(whoisXMLTree);
 				whoisXMLTree.setVisible(true);
 				xmlToTree.expandAllNodes();
 				whoisXMLTree = xmlToTree.show();
-				// TODO
 				logConsole("Searching completed!");
 			}
 		});
 
-		gl_whoisSearchPanel.setVerticalGroup(gl_whoisSearchPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_whoisSearchPanel.createSequentialGroup().addGap(7)
-						.addGroup(gl_whoisSearchPanel.createParallelGroup(Alignment.LEADING)
-								.addComponent(whoisSearchField, GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
-								.addGroup(gl_whoisSearchPanel.createSequentialGroup()
-										.addComponent(whoisSearchButton, GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
-										.addGap(1)))
-						.addGap(6)));
-		whoisSearchPanel.setLayout(gl_whoisSearchPanel);
-		whoIsPanel.setLayout(gl_whoIsPanel);
-
-		JPanel dnslookupPanel = new JPanel();
-		tabbedPane.addTab("DNS Lookup", null, dnslookupPanel, null);
-
-		JLayeredPane dnslookupSearchPanel = new JLayeredPane();
-		dnslookupSearchPanel.setToolTipText("You can search ip's and domain names");
-		dnslookupSearchPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-				"Search DNS Records", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-		dnsSearchField = new JTextField();
-		dnsSearchField.setColumns(10);
-
-		JButton dnsSearchButton = new JButton("Search");
-		GroupLayout gl_dnslookupSearchPanel = new GroupLayout(dnslookupSearchPanel);
-		gl_dnslookupSearchPanel.setHorizontalGroup(gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
-				.addGap(0, 619, Short.MAX_VALUE)
-				.addGroup(gl_dnslookupSearchPanel.createSequentialGroup().addGap(12)
-						.addComponent(dnsSearchField, GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE).addGap(12)
-						.addComponent(dnsSearchButton, GroupLayout.PREFERRED_SIZE, 115, GroupLayout.PREFERRED_SIZE)
-						.addGap(6)));
-
-		gl_dnslookupSearchPanel.setVerticalGroup(gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
-				.addGap(0, 66, Short.MAX_VALUE)
-				.addGroup(gl_dnslookupSearchPanel.createSequentialGroup().addGap(7)
-						.addGroup(gl_dnslookupSearchPanel.createParallelGroup(Alignment.LEADING)
-								.addComponent(dnsSearchField, GroupLayout.DEFAULT_SIZE, 28, Short.MAX_VALUE)
-								.addGroup(gl_dnslookupSearchPanel.createSequentialGroup()
-										.addComponent(dnsSearchButton, GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
-										.addGap(1)))
-						.addGap(6)));
-		dnslookupSearchPanel.setLayout(gl_dnslookupSearchPanel);
-
-		JLayeredPane dnsEditorPanel = new JLayeredPane();
-		dnsEditorPanel.setBorder(new TitledBorder(null, "Editor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		dnsEditorPanel.setLayout(new GridLayout(1, 0, 0, 0));
-		GroupLayout gl_dnslookupPanel = new GroupLayout(dnslookupPanel);
-		gl_dnslookupPanel.setHorizontalGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_dnslookupPanel.createSequentialGroup().addContainerGap()
-						.addGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
-								.addComponent(dnslookupSearchPanel, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE)
-								.addComponent(dnsEditorPanel, GroupLayout.DEFAULT_SIZE, 619, Short.MAX_VALUE))
-						.addContainerGap()));
-		gl_dnslookupPanel.setVerticalGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_dnslookupPanel.createSequentialGroup().addContainerGap()
-						.addComponent(dnslookupSearchPanel, GroupLayout.PREFERRED_SIZE, 66, GroupLayout.PREFERRED_SIZE)
-						.addGap(7).addComponent(dnsEditorPanel, GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE)
-						.addContainerGap()));
-
-		JTabbedPane tabbedPane_2 = new JTabbedPane(JTabbedPane.TOP);
-		dnsEditorPanel.add(tabbedPane_2);
-
-		JPanel panel_4 = new JPanel();
-		tabbedPane_2.addTab("Editor", null, panel_4, null);
-		panel_4.setLayout(new GridLayout(0, 1, 0, 0));
-
-		JScrollPane scrollPane_3 = new JScrollPane();
-		panel_4.add(scrollPane_3);
-
-		JEditorPane dnsEditor = new JEditorPane();
-		dnsEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
-		scrollPane_3.setViewportView(dnsEditor);
-
-		JPanel dnsTreePanel = new JPanel();
-		tabbedPane_2.addTab("Tree View", null, dnsTreePanel, null);
-		dnsTreePanel.setLayout(new GridLayout(0, 1, 0, 0));
-		dnslookupPanel.setLayout(gl_dnslookupPanel);
-
-		JScrollPane scrollPane_6 = new JScrollPane();
-		dnsTreePanel.add(scrollPane_6);
-
-		dnsSearchButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				logConsole("Starting searching dns information of " + dnsSearchField.getText());
-				dnsEditor.setEditorKitForContentType("text/xml", new XmlEditorKit());
-				dnsEditor.setContentType("text/xml");
-				dnsEditor.setText(dnsdata.getXMLContentAsString(dnsSearchField.getText()));
-				// TODO
-				xmlToTree = new XmlToTree(dnsdata.getXMLContentAsDocument(dnsSearchField.getText()));
-				if (xmlToTree.show() == null) {
-					logConsole("ERROR: Tree not defined!");
-					return;
-				}
-				JTree dnsXMLTree = xmlToTree.show();
-				scrollPane_6.setViewportView(dnsXMLTree);
-				dnsXMLTree.setVisible(true);
-				xmlToTree.expandAllNodes();
-				dnsXMLTree = xmlToTree.show();
-				dnsTreePanel.add(scrollPane_6);
-				logConsole("Searching completed!");
-			}
-		});
-
-		JPanel panel_1 = new JPanel();
-		tabbedPane.addTab("Converter", null, panel_1, "Here you can convert ip to domain and domain to ip");
-
-		JLayeredPane layeredPane_1 = new JLayeredPane();
-		layeredPane_1.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Domain to IP converter",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-		JLayeredPane layeredPane_2 = new JLayeredPane();
-		layeredPane_2.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "IP to Domain coverter",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-		iptdIpField = new JTextField();
-		iptdIpField.setColumns(10);
-
-		JButton iptdButton = new JButton("->");
 		iptdButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -732,50 +1094,6 @@ public class GUI extends JFrame {
 			}
 		});
 
-		iptdDomainFIeld = new JTextField();
-		iptdDomainFIeld.setColumns(10);
-		GroupLayout gl_layeredPane_2 = new GroupLayout(layeredPane_2);
-		gl_layeredPane_2.setHorizontalGroup(gl_layeredPane_2.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_layeredPane_2.createSequentialGroup().addContainerGap()
-						.addComponent(iptdIpField, GroupLayout.DEFAULT_SIZE, 153, Short.MAX_VALUE)
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(iptdButton, GroupLayout.DEFAULT_SIZE, 94, Short.MAX_VALUE)
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(iptdDomainFIeld, GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE)
-						.addContainerGap()));
-		gl_layeredPane_2.setVerticalGroup(gl_layeredPane_2.createParallelGroup(Alignment.LEADING)
-				.addGroup(Alignment.TRAILING,
-						gl_layeredPane_2.createSequentialGroup().addGap(25)
-								.addGroup(gl_layeredPane_2.createParallelGroup(Alignment.BASELINE)).addGap(25))
-				.addGroup(gl_layeredPane_2.createSequentialGroup().addContainerGap()
-						.addGroup(gl_layeredPane_2.createParallelGroup(Alignment.BASELINE)
-								.addComponent(iptdIpField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.PREFERRED_SIZE)
-								.addComponent(iptdDomainFIeld, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.PREFERRED_SIZE)
-								.addComponent(iptdButton))
-						.addContainerGap(40, Short.MAX_VALUE)));
-		layeredPane_2.setLayout(gl_layeredPane_2);
-		GroupLayout gl_panel_1 = new GroupLayout(panel_1);
-		gl_panel_1.setHorizontalGroup(gl_panel_1.createParallelGroup(Alignment.LEADING).addGroup(Alignment.TRAILING,
-				gl_panel_1.createSequentialGroup().addGap(79)
-						.addGroup(gl_panel_1.createParallelGroup(Alignment.TRAILING)
-								.addComponent(layeredPane_2, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 493,
-										Short.MAX_VALUE)
-								.addComponent(layeredPane_1, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 359,
-										Short.MAX_VALUE))
-						.addGap(71)));
-		gl_panel_1.setVerticalGroup(gl_panel_1.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel_1.createSequentialGroup().addGap(65)
-						.addComponent(layeredPane_1, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(layeredPane_2, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
-						.addContainerGap(158, Short.MAX_VALUE)));
-
-		dtipDomainField = new JTextField();
-		dtipDomainField.setColumns(10);
-
-		JButton dtipButton = new JButton("->");
 		dtipButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -790,128 +1108,6 @@ public class GUI extends JFrame {
 			}
 		});
 
-		dtipIpField = new JTextField();
-		dtipIpField.setColumns(10);
-		GroupLayout gl_layeredPane_1 = new GroupLayout(layeredPane_1);
-		gl_layeredPane_1.setHorizontalGroup(gl_layeredPane_1.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_layeredPane_1.createSequentialGroup().addContainerGap()
-						.addComponent(dtipDomainField, GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE).addGap(12)
-						.addComponent(dtipButton, GroupLayout.DEFAULT_SIZE, 51, Short.MAX_VALUE)
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(dtipIpField, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE).addContainerGap()));
-		gl_layeredPane_1.setVerticalGroup(gl_layeredPane_1.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_layeredPane_1.createSequentialGroup().addContainerGap()
-						.addGroup(gl_layeredPane_1.createParallelGroup(Alignment.BASELINE, false)
-								.addComponent(dtipDomainField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.PREFERRED_SIZE)
-								.addComponent(dtipButton).addComponent(dtipIpField, GroupLayout.PREFERRED_SIZE,
-										GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-						.addGap(40)));
-		layeredPane_1.setLayout(gl_layeredPane_1);
-		panel_1.setLayout(gl_panel_1);
-
-		JPanel panel_3 = new JPanel();
-		tabbedPane.addTab("IP Scanner", null, panel_3, null);
-
-		JLayeredPane ipscanPorts = new JLayeredPane();
-		ipscanPorts.setBorder(new TitledBorder(null, "Port range", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-		JLayeredPane ipscanControl = new JLayeredPane();
-		ipscanControl
-				.setBorder(new TitledBorder(null, "Control Panel", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-		JLayeredPane ipscanLogPanel = new JLayeredPane();
-		ipscanLogPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		GroupLayout gl_panel_3 = new GroupLayout(panel_3);
-		gl_panel_3.setHorizontalGroup(gl_panel_3.createParallelGroup(Alignment.LEADING).addGroup(gl_panel_3
-				.createSequentialGroup().addContainerGap()
-				.addGroup(gl_panel_3.createParallelGroup(Alignment.LEADING)
-						.addComponent(ipscanPorts, GroupLayout.PREFERRED_SIZE, 285, GroupLayout.PREFERRED_SIZE)
-						.addComponent(ipscanControl, GroupLayout.PREFERRED_SIZE, 285, GroupLayout.PREFERRED_SIZE))
-				.addPreferredGap(ComponentPlacement.UNRELATED)
-				.addComponent(ipscanLogPanel, GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE).addContainerGap()));
-		gl_panel_3.setVerticalGroup(gl_panel_3.createParallelGroup(Alignment.LEADING).addGroup(gl_panel_3
-				.createSequentialGroup().addGap(40)
-				.addGroup(gl_panel_3.createParallelGroup(Alignment.LEADING)
-						.addComponent(ipscanLogPanel, GroupLayout.DEFAULT_SIZE, 337, Short.MAX_VALUE)
-						.addGroup(gl_panel_3.createSequentialGroup()
-								.addComponent(ipscanPorts, GroupLayout.PREFERRED_SIZE, 80, GroupLayout.PREFERRED_SIZE)
-								.addPreferredGap(ComponentPlacement.UNRELATED)
-								.addComponent(ipscanControl, GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)))
-				.addContainerGap()));
-		ipscanLogPanel.setLayout(new GridLayout(1, 0, 0, 0));
-
-		JScrollPane scrollPane_4 = new JScrollPane();
-		ipscanLogPanel.add(scrollPane_4);
-
-		JEditorPane ipscanLog = new JEditorPane();
-		scrollPane_4.setViewportView(ipscanLog);
-		ipscanLog.setEditable(false);
-		ipscanLog.setForeground(Color.GREEN);
-		ipscanLog.setBackground(Color.BLACK);
-
-		JButton ipscanButton = new JButton("Start Scanning");
-
-		JCheckBox ipscanOpenPort = new JCheckBox("Open port");
-
-		JCheckBox ipscanOSDetect = new JCheckBox("OS Detect");
-		ipscanOSDetect.setEnabled(false);
-
-		JLabel ipscanAddresLabel = new JLabel("Address");
-
-		ipscanAddress = new JTextField();
-		ipscanAddress.setColumns(10);
-
-		JProgressBar ipscanProgbar = new JProgressBar();
-
-		JButton ipscanCancel = new JButton("Cancel");
-		GroupLayout gl_ipscanControl = new GroupLayout(ipscanControl);
-		gl_ipscanControl
-				.setHorizontalGroup(gl_ipscanControl.createParallelGroup(Alignment.TRAILING)
-						.addGroup(gl_ipscanControl.createSequentialGroup().addGap(6)
-								.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
-										.addComponent(ipscanOpenPort, GroupLayout.PREFERRED_SIZE, 113,
-												GroupLayout.PREFERRED_SIZE)
-										.addComponent(ipscanOSDetect, GroupLayout.PREFERRED_SIZE, 113,
-												GroupLayout.PREFERRED_SIZE))
-								.addGap(8)
-								.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
-										.addComponent(ipscanProgbar, GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
-										.addComponent(ipscanButton, GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE))
-								.addGap(6))
-						.addGroup(gl_ipscanControl.createSequentialGroup().addContainerGap()
-								.addComponent(ipscanAddress, GroupLayout.DEFAULT_SIZE, 249, Short.MAX_VALUE)
-								.addContainerGap())
-						.addGroup(gl_ipscanControl.createSequentialGroup().addContainerGap()
-								.addComponent(ipscanAddresLabel, GroupLayout.PREFERRED_SIZE, 56,
-										GroupLayout.PREFERRED_SIZE)
-								.addContainerGap(205, Short.MAX_VALUE))
-						.addGroup(Alignment.LEADING,
-								gl_ipscanControl
-										.createSequentialGroup().addGap(190).addComponent(ipscanCancel,
-												GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-										.addContainerGap()));
-		gl_ipscanControl.setVerticalGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_ipscanControl.createSequentialGroup()
-						.addGroup(gl_ipscanControl.createParallelGroup(Alignment.LEADING)
-								.addGroup(gl_ipscanControl.createSequentialGroup().addGap(12)
-										.addComponent(ipscanOpenPort).addGap(5).addComponent(ipscanOSDetect)
-										.addPreferredGap(ComponentPlacement.RELATED, 91, Short.MAX_VALUE)
-										.addComponent(ipscanAddresLabel))
-								.addGroup(
-										gl_ipscanControl.createSequentialGroup()
-												.addComponent(ipscanButton, GroupLayout.PREFERRED_SIZE, 49,
-														GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(ipscanProgbar, GroupLayout.PREFERRED_SIZE, 31,
-														GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED).addComponent(ipscanCancel,
-														GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)))
-						.addPreferredGap(ComponentPlacement.RELATED)
-						.addComponent(ipscanAddress, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
-						.addContainerGap()));
-		ipscanControl.setLayout(gl_ipscanControl);
-
 		ipscanCancel.addActionListener(new ActionListener() {
 
 			@Override
@@ -919,36 +1115,6 @@ public class GUI extends JFrame {
 				scanRunning = false;
 			}
 		});
-
-		JLabel lblFromPort = new JLabel("From port");
-
-		JLabel lblToPort = new JLabel("To port");
-
-		JSpinner ipscanPort1 = new JSpinner();
-
-		JSpinner ipscanPort2 = new JSpinner();
-		GroupLayout gl_ipscanPorts = new GroupLayout(ipscanPorts);
-		gl_ipscanPorts.setHorizontalGroup(gl_ipscanPorts.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_ipscanPorts.createSequentialGroup().addGap(33)
-						.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.TRAILING)
-								.addComponent(ipscanPort1, GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE)
-								.addGroup(gl_ipscanPorts.createSequentialGroup().addGap(35).addComponent(lblFromPort,
-										GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-						.addGap(7)
-						.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.TRAILING)
-								.addComponent(ipscanPort2, GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE)
-								.addGroup(gl_ipscanPorts.createSequentialGroup().addGap(50).addComponent(lblToPort,
-										GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-						.addGap(49)));
-		gl_ipscanPorts.setVerticalGroup(gl_ipscanPorts.createParallelGroup(Alignment.LEADING).addGroup(gl_ipscanPorts
-				.createSequentialGroup()
-				.addGroup(gl_ipscanPorts.createParallelGroup(Alignment.BASELINE).addComponent(lblToPort)
-						.addComponent(lblFromPort, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-				.addPreferredGap(ComponentPlacement.RELATED).addGroup(gl_ipscanPorts
-						.createParallelGroup(Alignment.BASELINE).addComponent(ipscanPort1).addComponent(ipscanPort2))
-				.addGap(10)));
-		ipscanPorts.setLayout(gl_ipscanPorts);
-		panel_3.setLayout(gl_panel_3);
 
 		ipscanButton.addActionListener(new ActionListener() {
 			@Override
@@ -1004,74 +1170,6 @@ public class GUI extends JFrame {
 			}
 		});
 
-		JPanel aboutPanel = new JPanel();
-		tabbedPane.addTab("About", null, aboutPanel, null);
-		aboutPanel.setLayout(new BorderLayout(0, 0));
-
-		Label label = new Label("About");
-		label.setAlignment(Label.CENTER);
-		label.setFont(new Font("Dialog", Font.PLAIN, 30));
-		aboutPanel.add(label, BorderLayout.NORTH);
-
-		JPanel panel = new JPanel();
-		aboutPanel.add(panel, BorderLayout.CENTER);
-		panel.setLayout(new GridLayout(0, 1, 0, 0));
-
-		JScrollPane scrollPane_2 = new JScrollPane();
-		panel.add(scrollPane_2);
-
-		JTextArea txtrIpTools = new JTextArea();
-		scrollPane_2.setViewportView(txtrIpTools);
-		txtrIpTools.setEditable(false);
-		txtrIpTools.setFont(new Font("Monospaced", Font.PLAIN, 20));
-		txtrIpTools.setBackground(UIManager.getColor("Button.background"));
-		txtrIpTools.setLineWrap(true);
-		txtrIpTools.setText(
-				"IP Tools.\r\nVersion Beta 1.2\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nThere is still plenty of features that are not avaible yet, but they will be soon!\r\nMade by videosambo\r\nMIT licensed");
-
-		JPanel settingsPanel = new JPanel();
-		tabbedPane.addTab("Settings", null, settingsPanel, null);
-
-		JLayeredPane settingsLanguagePanel = new JLayeredPane();
-		settingsLanguagePanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Languages",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-		JLayeredPane settingsPacketSettingsPanel = new JLayeredPane();
-		settingsPacketSettingsPanel.setBorder(
-				new TitledBorder(null, "PacketSettings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-		JLayeredPane settingsThemesPanel = new JLayeredPane();
-		settingsThemesPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Themes",
-				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-		JLayeredPane layeredPane_3 = new JLayeredPane();
-		layeredPane_3.setBorder(new TitledBorder(null, "API Key", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		GroupLayout gl_settingsPanel = new GroupLayout(settingsPanel);
-		gl_settingsPanel.setHorizontalGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_settingsPanel.createSequentialGroup().addContainerGap()
-						.addGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
-								.addComponent(settingsPacketSettingsPanel, GroupLayout.PREFERRED_SIZE, 168,
-										GroupLayout.PREFERRED_SIZE)
-								.addGroup(gl_settingsPanel.createSequentialGroup()
-										.addComponent(settingsLanguagePanel, GroupLayout.PREFERRED_SIZE, 168,
-												GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(ComponentPlacement.UNRELATED)
-										.addComponent(settingsThemesPanel, GroupLayout.PREFERRED_SIZE, 182,
-												GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(ComponentPlacement.RELATED)
-										.addComponent(layeredPane_3, GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)))
-						.addContainerGap()));
-		gl_settingsPanel.setVerticalGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_settingsPanel.createSequentialGroup().addContainerGap()
-						.addGroup(gl_settingsPanel.createParallelGroup(Alignment.TRAILING, false)
-								.addComponent(layeredPane_3, Alignment.LEADING)
-								.addComponent(settingsLanguagePanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 105,
-										Short.MAX_VALUE)
-								.addComponent(settingsThemesPanel, Alignment.LEADING))
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(settingsPacketSettingsPanel, GroupLayout.DEFAULT_SIZE, 246, Short.MAX_VALUE)
-						.addContainerGap()));
-
 		settingsWHOISApiKey.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				xmldata.setAPIKEY(settingsWHOISApiKey.getText());
@@ -1079,98 +1177,6 @@ public class GUI extends JFrame {
 				logConsole("Using APIKEY '" + settingsWHOISApiKey.getText() + "'");
 			}
 		});
-		logConsole("Using APIKEY '" + settingsWHOISApiKey.getText() + "'");
-		settingsWHOISApiKey.setToolTipText("Enter whois api key here if you want to use whois and dns lookput");
-		settingsWHOISApiKey.setColumns(10);
-
-		JLabel lblWhoisApiKey = new JLabel("WHOIS API Key");
-		lblWhoisApiKey.setToolTipText("My api key can run out of uses so you can enter your own");
-		GroupLayout gl_layeredPane_3 = new GroupLayout(layeredPane_3);
-		gl_layeredPane_3
-				.setHorizontalGroup(
-						gl_layeredPane_3.createParallelGroup(Alignment.LEADING)
-								.addGroup(gl_layeredPane_3.createSequentialGroup().addContainerGap()
-										.addGroup(gl_layeredPane_3.createParallelGroup(Alignment.LEADING)
-												.addComponent(settingsWHOISApiKey, GroupLayout.DEFAULT_SIZE, 214,
-														Short.MAX_VALUE)
-												.addComponent(lblWhoisApiKey))
-										.addContainerGap()));
-		gl_layeredPane_3.setVerticalGroup(gl_layeredPane_3.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_layeredPane_3.createSequentialGroup().addContainerGap().addComponent(lblWhoisApiKey)
-						.addPreferredGap(ComponentPlacement.RELATED).addComponent(settingsWHOISApiKey,
-								GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addContainerGap(29, Short.MAX_VALUE)));
-		layeredPane_3.setLayout(gl_layeredPane_3);
-		settingsThemesPanel.setLayout(null);
-
-		JMenuBar menuBar_2 = new JMenuBar();
-		menuBar_2.setBounds(28, 43, 119, 26);
-		settingsThemesPanel.add(menuBar_2);
-
-		JMenu mnThemes = new JMenu("Themes");
-		menuBar_2.add(mnThemes);
-
-		JRadioButtonMenuItem rdbtnmntmLightTheme = new JRadioButtonMenuItem("Light Theme");
-		buttonGroup_2.add(rdbtnmntmLightTheme);
-		rdbtnmntmLightTheme.setSelected(true);
-		mnThemes.add(rdbtnmntmLightTheme);
-
-		JRadioButtonMenuItem rdbtnmntmDarkTheme = new JRadioButtonMenuItem("Dark Theme");
-		rdbtnmntmDarkTheme.setEnabled(false);
-		buttonGroup_2.add(rdbtnmntmDarkTheme);
-		mnThemes.add(rdbtnmntmDarkTheme);
-		settingsLanguagePanel.setLayout(null);
-
-		JMenuBar menuBar_1 = new JMenuBar();
-		menuBar_1.setBounds(23, 43, 119, 26);
-		settingsLanguagePanel.add(menuBar_1);
-
-		JMenu mnLanguage = new JMenu("Language");
-		menuBar_1.add(mnLanguage);
-
-		JRadioButtonMenuItem rdbtnmntmEnglish = new JRadioButtonMenuItem("English");
-		buttonGroup_1.add(rdbtnmntmEnglish);
-		rdbtnmntmEnglish.setSelected(true);
-		mnLanguage.add(rdbtnmntmEnglish);
-
-		JRadioButtonMenuItem rdbtnmntmFinnish = new JRadioButtonMenuItem("Finnish");
-		buttonGroup_1.add(rdbtnmntmFinnish);
-		rdbtnmntmFinnish.setEnabled(false);
-		mnLanguage.add(rdbtnmntmFinnish);
-
-		JSpinner settingsMaxPacketCount = new JSpinner();
-		settingsMaxPacketCount.setEnabled(false);
-		settingsMaxPacketCount.setModel(new SpinnerNumberModel(new Integer(1000000), null, null, new Integer(1)));
-
-		JLabel settingsMaxPackets = new JLabel("Max Packet Count");
-		GroupLayout gl_settingsPacketSettingsPanel = new GroupLayout(settingsPacketSettingsPanel);
-		gl_settingsPacketSettingsPanel.setHorizontalGroup(gl_settingsPacketSettingsPanel
-				.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_settingsPacketSettingsPanel.createSequentialGroup().addContainerGap()
-						.addGroup(gl_settingsPacketSettingsPanel.createParallelGroup(Alignment.LEADING)
-								.addComponent(settingsMaxPackets, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 144,
-										Short.MAX_VALUE)
-								.addComponent(settingsMaxPacketCount, GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE))
-						.addContainerGap()));
-		gl_settingsPacketSettingsPanel
-				.setVerticalGroup(gl_settingsPacketSettingsPanel.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_settingsPacketSettingsPanel.createSequentialGroup().addContainerGap()
-								.addComponent(settingsMaxPackets).addPreferredGap(ComponentPlacement.RELATED)
-								.addComponent(settingsMaxPacketCount, GroupLayout.PREFERRED_SIZE,
-										GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-								.addContainerGap(163, Short.MAX_VALUE)));
-		settingsPacketSettingsPanel.setLayout(gl_settingsPacketSettingsPanel);
-		settingsPanel.setLayout(gl_settingsPanel);
-
-		JPanel consolePanel = new JPanel();
-		consolePanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		tabbedPane.addTab("Console", null, consolePanel, null);
-		consolePanel.setLayout(new GridLayout(0, 1, 0, 0));
-
-		consoleLog.setEditable(false);
-		consoleLog.setBackground(Color.BLACK);
-		consoleLog.setForeground(Color.GREEN);
-		consolePanel.add(consoleLog);
 
 		logConsole("IP Tools Started!");
 	}
