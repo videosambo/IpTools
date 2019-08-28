@@ -89,11 +89,11 @@ public class GUI extends JFrame {
 
 	private XmlToTree xmlToTree;
 
-	private Thread t;
 	private JTextField ipscanAddress;
 	private Scan scan;
 
 	private boolean scanRunning = false;
+	private boolean booterRunning = false;
 	private final ButtonGroup buttonGroup_1 = new ButtonGroup();
 	private final ButtonGroup buttonGroup_2 = new ButtonGroup();
 	private static JTextField settingsWHOISApiKey;
@@ -223,14 +223,12 @@ public class GUI extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (t == null || !t.isAlive())
-					return;
-				t.interrupt();
+				booterRunning = false;
 				booterProgbar.setIndeterminate(false);
 				booterProgbar.setStringPainted(false);
 				booterProgbar.setValue(0);
 				booterProgbar.setMaximum(100);
-				logConsole("Thread interrupted!");
+				logConsole("Booter stopped!");
 			}
 		});
 
@@ -443,30 +441,25 @@ public class GUI extends JFrame {
 					logConsole("ERROR: Packet count cannot be 0");
 					return;
 				}
+				booterRunning = true;
 				if (radioTCP.isSelected()) {
 					tcpSender = new TCPPacketSender(address, port);
 					if (packetCount == -1) {
-						if (isRunning())
-							t.interrupt();
 						logConsole("Sending TCP packets!");
-						t = new Thread(new Runnable() {
+						new Thread(new Runnable() {
 
 							@Override
 							public void run() {
 								booterProgbar.setIndeterminate(true);
-								while (true) {
+								while (booterRunning) {
 									tcpSender.sendStringPacket(content);
 								}
 							}
-						});
-						t.setDaemon(true);
-						t.start();
+						}).start();
 					} else {
 						tcpSender = new TCPPacketSender(address, port);
-						if (isRunning())
-							t.interrupt();
 						logConsole("Starting sending TCP packets...");
-						t = new Thread(new Runnable() {
+						new Thread(new Runnable() {
 							@Override
 							public void run() {
 								booterProgbar.setStringPainted(true);
@@ -474,37 +467,33 @@ public class GUI extends JFrame {
 								for (int i = 0; i < packetCount; i++) {
 									booterProgbar.setValue(i);
 									tcpSender.sendStringPacket(content);
+									if (!booterRunning)
+										break;
 								}
 								booterProgbar.setStringPainted(false);
 								tcpSender.closeSocket();
 								logConsole("All TCP packets sended!");
 							}
-						});
-						t.setDaemon(true);
-						t.start();
+						}).start();
 					}
 				} else if (radioUDP.isSelected()) {
 					udpSender = new UDPPacketSender(address, port);
 					if (packetCount == -1) {
-						if (isRunning())
-							t.interrupt();
 						logConsole("Sending UDP packets!");
-						t = new Thread(new Runnable() {
+						new Thread(new Runnable() {
 
 							@Override
 							public void run() {
 								booterProgbar.setIndeterminate(true);
-								while (true) {
+								while (booterRunning) {
 									udpSender.sendStringPacket(content);
 								}
 							}
-						});
-						t.setDaemon(true);
-						t.start();
+						}).start();
 					} else {
 						udpSender = new UDPPacketSender(address, port);
 						logConsole("Starting sending UDP packets...");
-						t = new Thread(new Runnable() {
+						new Thread(new Runnable() {
 							@Override
 							public void run() {
 								booterProgbar.setStringPainted(true);
@@ -512,14 +501,14 @@ public class GUI extends JFrame {
 								for (int i = 0; i < packetCount + 1; i++) {
 									booterProgbar.setValue(i);
 									udpSender.sendStringPacket(content);
+									if (!booterRunning)
+										break;
 								}
 								booterProgbar.setStringPainted(false);
 								udpSender.closeSocket();
 								logConsole("All UDP packets sended!");
 							}
-						});
-						t.setDaemon(true);
-						t.start();
+						}).start();
 					}
 				} else {
 					logConsole("ERROR: Invalid state");
@@ -1038,7 +1027,7 @@ public class GUI extends JFrame {
 		txtrIpTools.setBackground(UIManager.getColor("Button.background"));
 		txtrIpTools.setLineWrap(true);
 		txtrIpTools.setText(
-				"IP Tools.\r\nVersion Beta 1.1\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nThere is still plenty of features that are not avaible yet, but they will be soon!\r\nMade by videosambo\r\nMIT licensed");
+				"IP Tools.\r\nVersion Beta 1.2\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nThere is still plenty of features that are not avaible yet, but they will be soon!\r\nMade by videosambo\r\nMIT licensed");
 
 		JPanel settingsPanel = new JPanel();
 		tabbedPane.addTab("Settings", null, settingsPanel, null);
@@ -1194,12 +1183,6 @@ public class GUI extends JFrame {
 		}
 
 		return "at_J7TntBlVBoWiwPElcLFbpdo9I30kC";
-	}
-
-	private boolean isRunning() {
-		if (t != null)
-			return true;
-		return false;
 	}
 
 	private static void addPopup(Component component, final JPopupMenu popup) {
