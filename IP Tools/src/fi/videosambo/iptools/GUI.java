@@ -12,9 +12,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -54,9 +57,9 @@ import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import fi.videosambo.iptools.Lang.Language;
 import fi.videosambo.iptools.booter.TCPPacketSender;
 import fi.videosambo.iptools.booter.UDPPacketSender;
 import fi.videosambo.iptools.ipscanner.Scan;
@@ -88,8 +91,10 @@ public class GUI extends JFrame {
 
 	private XmlToTree xmlToTree;
 	private Scan scan;
+	private Lang lang;
 
 	private boolean scanRunning = false, booterRunning = false;
+	private String settingsFile = "./settings.txt";
 
 	private static JTextField settingsWHOISApiKey;
 
@@ -123,6 +128,8 @@ public class GUI extends JFrame {
 	 * Create the frame.
 	 */
 	public GUI() {
+		
+		lang = new Lang(this, Language.EN);
 
 		settingsWHOISApiKey = new JTextField();
 		consoleLog = new JEditorPane();
@@ -183,24 +190,25 @@ public class GUI extends JFrame {
 		whoisEditor = new JEditorPane();
 		dnsEditor = new JEditorPane();
 		ipscanLog = new JEditorPane();
-		JMenu mnFile = new JMenu("File");
-		JMenu mnThemes = new JMenu("Themes");
-		JMenu mnLanguage = new JMenu("Language");
-		JMenuItem booterSave = new JMenuItem("Save");
-		JMenuItem booterLoad = new JMenuItem("Load");
-		JRadioButtonMenuItem rdbtnmntmLightTheme = new JRadioButtonMenuItem("Light Theme");
-		JRadioButtonMenuItem rdbtnmntmDarkTheme = new JRadioButtonMenuItem("Dark Theme");
-		JRadioButtonMenuItem rdbtnmntmEnglish = new JRadioButtonMenuItem("English");
-		JRadioButtonMenuItem rdbtnmntmFinnish = new JRadioButtonMenuItem("Finnish");
+		JMenu mnFile = new JMenu(lang.getMessage("lang.file"));
+		JMenu mnThemes = new JMenu(lang.getMessage("lang.themes"));
+		JMenu mnLanguage = new JMenu(lang.getMessage("lang.language"));
+		JMenuItem booterSave = new JMenuItem(lang.getMessage("lang.save"));
+		JMenuItem booterLoad = new JMenuItem(lang.getMessage("lang.load"));
+		JRadioButtonMenuItem rdbtnmntmLightTheme = new JRadioButtonMenuItem(lang.getMessage("lang.theme-light"));
+		JRadioButtonMenuItem rdbtnmntmDarkTheme = new JRadioButtonMenuItem(lang.getMessage("lang.theme-dark"));
+		JRadioButtonMenuItem rdbtnmntmEnglish = new JRadioButtonMenuItem(lang.getMessage("lang.language-list.english"));
+		JRadioButtonMenuItem rdbtnmntmFinnish = new JRadioButtonMenuItem(lang.getMessage("lang.language-list.finnish"));
 		JSeparator booterSeparator = new JSeparator();
-		JButton booterLaunch = new JButton("Attack");
-		JButton booterSTOP = new JButton("STOP");
-		JButton whoisSearchButton = new JButton("Search");
-		JButton dnsSearchButton = new JButton("Search");
+		JButton booterLaunch = new JButton(lang.getMessage("lang.attack"));
+		JButton booterSTOP = new JButton(lang.getMessage("lang.stop"));
+		JButton whoisSearchButton = new JButton(lang.getMessage("lang.search"));
+		JButton dnsSearchButton = new JButton(lang.getMessage("lang.search"));
 		JButton iptdButton = new JButton("->");
 		JButton dtipButton = new JButton("->");
-		JButton ipscanButton = new JButton("Start Scanning");
-		JButton ipscanCancel = new JButton("Cancel");
+		JButton ipscanButton = new JButton(lang.getMessage("lang.start-scan"));
+		JButton ipscanCancel = new JButton(lang.getMessage("lang.cancel"));
+		JButton btnSave = new JButton(lang.getMessage("lang.save"));
 		JProgressBar booterProgbar = new JProgressBar();
 		JProgressBar ipscanProgbar = new JProgressBar();
 		GroupLayout gl_booterPanel = new GroupLayout(booterPanel);
@@ -217,6 +225,39 @@ public class GUI extends JFrame {
 		GroupLayout gl_converterDTIPPanel = new GroupLayout(converterDTIPPanel);
 		GroupLayout gl_settingsPacketSettingsPanel = new GroupLayout(settingsPacketSettingsPanel);
 		GroupLayout gl_settingsPanel = new GroupLayout(settingsPanel);
+		
+		
+		gl_settingsPanel.setHorizontalGroup(
+			gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPanel.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_settingsPanel.createSequentialGroup()
+							.addComponent(settingsPacketSettingsPanel, GroupLayout.PREFERRED_SIZE, 168, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED, 339, Short.MAX_VALUE)
+							.addComponent(btnSave, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE))
+						.addGroup(gl_settingsPanel.createSequentialGroup()
+							.addComponent(settingsLanguagePanel, GroupLayout.PREFERRED_SIZE, 168, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(settingsThemesPanel, GroupLayout.PREFERRED_SIZE, 182, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(settingsAPIPanel, GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)))
+					.addContainerGap())
+		);
+		gl_settingsPanel.setVerticalGroup(
+			gl_settingsPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_settingsPanel.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_settingsPanel.createParallelGroup(Alignment.TRAILING, false)
+						.addComponent(settingsAPIPanel, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(settingsLanguagePanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+						.addComponent(settingsThemesPanel, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addGroup(gl_settingsPanel.createParallelGroup(Alignment.TRAILING)
+						.addComponent(settingsPacketSettingsPanel, GroupLayout.DEFAULT_SIZE, 239, Short.MAX_VALUE)
+						.addComponent(btnSave, GroupLayout.PREFERRED_SIZE, 41, GroupLayout.PREFERRED_SIZE))
+					.addContainerGap())
+		);
 		GroupLayout gl_settingsAPIPanel = new GroupLayout(settingsAPIPanel);
 		GroupLayout gl_ipscannerPanel = new GroupLayout(ipscannerPanel);
 		GroupLayout gl_ipscanControl = new GroupLayout(ipscanControl);
@@ -233,20 +274,22 @@ public class GUI extends JFrame {
 		JScrollPane dnsTreeview = new JScrollPane();
 		JScrollPane scrollPane_2 = new JScrollPane();
 		JScrollPane scrollPane_4 = new JScrollPane();
-		JLabel lblIpAddress = new JLabel("IP Address");
-		JLabel lblPort = new JLabel("Port");
-		JLabel settingsMaxPackets = new JLabel("Max Packet Count");
-		JLabel lblWhoisApiKey = new JLabel("WHOIS API Key");
-		JLabel ipscanAddresLabel = new JLabel("Address");
-		JLabel lblFromPort = new JLabel("From port");
-		JLabel lblToPort = new JLabel("To port");
-		Label aboutLabel = new Label("About");
-		JRadioButton radioTCP = new JRadioButton("Transmission Control Protocol");
-		JRadioButton radioUDP = new JRadioButton("User Datagram Protocol");
+		JLabel lblIpAddress = new JLabel(lang.getMessage("lang.ip-address"));
+		JLabel lblPort = new JLabel(lang.getMessage("lang.port"));
+		JLabel settingsMaxPackets = new JLabel(lang.getMessage("lang.max-packet-count"));
+		JLabel lblWhoisApiKey = new JLabel(lang.getMessage("lang.whois-api-key"));
+		JLabel ipscanAddresLabel = new JLabel(lang.getMessage("lang.address"));
+		JLabel lblFromPort = new JLabel(lang.getMessage("lang.from-port"));
+		JLabel lblToPort = new JLabel(lang.getMessage("lang.to-port"));
+		Label aboutLabel = new Label(lang.getMessage("lang.tabs.about"));
+		JRadioButton radioTCP = new JRadioButton(lang.getMessage("lang.tcp-long"));
+		JRadioButton radioUDP = new JRadioButton(lang.getMessage("lang.udp-long"));
 		JTextArea txtrIpTools = new JTextArea();
-		JCheckBox ipscanOpenPort = new JCheckBox("Open port");
-		JCheckBox ipscanOSDetect = new JCheckBox("OS Detect");
+		JCheckBox ipscanOpenPort = new JCheckBox(lang.getMessage("lang.open-port"));
+		JCheckBox ipscanOSDetect = new JCheckBox(lang.getMessage("lang.os-detect"));
 
+		//lang.getMessage("lang.")
+		
 		/*
 		 * Specifying elements
 		 */
@@ -255,19 +298,19 @@ public class GUI extends JFrame {
 
 		tabbedPane.addTab("Booter", null, booterPanel, null);
 
-		protocolPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Protocol",
+		protocolPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), lang.getMessage("lang.layer-panel.protocol"),
 				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		targetInfoPanel.setBorder(
-				new TitledBorder(null, "Target Infromation", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+				new TitledBorder(null, lang.getMessage("lang.layer-panel.target-info"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		packetPanel.setBorder(
-				new TitledBorder(null, "Packet Information", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+				new TitledBorder(null, lang.getMessage("lang.layer-panel.packet-info"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		packetCountPanel
-				.setBorder(new TitledBorder(null, "Packet Count", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+				.setBorder(new TitledBorder(null, lang.getMessage("lang.layer-panel.packet-count"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-		booterLaunch.setToolTipText("Start sending packets");
+		booterLaunch.setToolTipText(lang.getMessage("lang.tooltips.send-packets"));
 
 		layeredPane.setBorder(null);
 
@@ -330,9 +373,9 @@ public class GUI extends JFrame {
 						.addComponent(menuBar, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 						.addGap(1)));
 		layeredPane.setLayout(gl_layeredPane);
-		booterPacketCount.setToolTipText("You can adjust packet count here");
+		booterPacketCount.setToolTipText(lang.getMessage("lang.tooltips.adjust-count"));
 
-		booterSlider.setToolTipText("Packet count to send, do not use 0 or it will not work");
+		booterSlider.setToolTipText(lang.getMessage("lang.tooltips.zero-packet-count"));
 		booterSlider.setValue(1);
 		booterSlider.setMinimum(-1);
 		booterSlider.setMinorTickSpacing(50000);
@@ -354,15 +397,15 @@ public class GUI extends JFrame {
 
 		packetPanel.add(scrollPane);
 		packetContent.setFont(new Font("Monospaced", Font.PLAIN, 16));
-		packetContent.setToolTipText("Type here content of your packet");
+		packetContent.setToolTipText(lang.getMessage("lang.tooltips.packet-content"));
 		scrollPane.setViewportView(packetContent);
 
 		booterAddressField = new JTextField();
-		booterAddressField.setToolTipText("Here you can enter ip or domain name");
+		booterAddressField.setToolTipText(lang.getMessage("lang.tooltips.booter-address-field"));
 		booterAddressField.setColumns(10);
 
 		booterPortField = new JTextField();
-		booterPortField.setToolTipText("port of ip");
+		booterPortField.setToolTipText(lang.getMessage("lang.tooltips.booter-port"));
 		booterPortField.setColumns(10);
 		gl_targetInfoPanel.setHorizontalGroup(gl_targetInfoPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_targetInfoPanel.createSequentialGroup().addContainerGap().addGroup(gl_targetInfoPanel
@@ -385,11 +428,11 @@ public class GUI extends JFrame {
 						.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 		targetInfoPanel.setLayout(gl_targetInfoPanel);
 
-		radioTCP.setToolTipText("TCP");
+		radioTCP.setToolTipText(lang.getMessage("lang.tooltips.tcp"));
 		radioTCP.setSelected(true);
 		buttonGroup.add(radioTCP);
 
-		radioUDP.setToolTipText("UDP");
+		radioUDP.setToolTipText(lang.getMessage("lang.tooltips.udp"));
 		buttonGroup.add(radioUDP);
 		gl_protocolPanel.setHorizontalGroup(gl_protocolPanel.createParallelGroup(Alignment.LEADING)
 				.addComponent(radioTCP, GroupLayout.PREFERRED_SIZE, 233, GroupLayout.PREFERRED_SIZE)
@@ -401,14 +444,13 @@ public class GUI extends JFrame {
 		protocolPanel.setLayout(gl_protocolPanel);
 		booterPanel.setLayout(gl_booterPanel);
 
-		tabbedPane.addTab("WHOIS", null, whoIsPanel, null);
+		tabbedPane.addTab(lang.getMessage("lang.tabs.whois"), null, whoIsPanel, null);
 
-		whoisSearchPanel.setToolTipText("You can search ip's and domain names");
+		whoisSearchPanel.setToolTipText(lang.getMessage("lang.tooltips.whois-address"));
 		whoisSearchPanel
-				.setBorder(new TitledBorder(null, "Search WhoIs", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
+				.setBorder(new TitledBorder(null, lang.getMessage("lang.layer-panel.search-whois"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		whoisEditorPanel
-				.setBorder(new TitledBorder(null, "Editor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+				.setBorder(new TitledBorder(null, lang.getMessage("lang.editor"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		gl_whoIsPanel.setHorizontalGroup(gl_whoIsPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(Alignment.TRAILING, gl_whoIsPanel.createSequentialGroup().addContainerGap()
 						.addGroup(gl_whoIsPanel.createParallelGroup(Alignment.TRAILING)
@@ -427,7 +469,7 @@ public class GUI extends JFrame {
 
 		whoisEditorPanel.add(whoisEditorPanelFrame);
 
-		whoisEditorPanelFrame.addTab("Editor", null, panel_2, null);
+		whoisEditorPanelFrame.addTab(lang.getMessage("lang.editor"), null, panel_2, null);
 		panel_2.setLayout(new GridLayout(0, 1, 0, 0));
 
 		panel_2.add(scrollPane_1);
@@ -435,7 +477,7 @@ public class GUI extends JFrame {
 		scrollPane_1.setViewportView(whoisEditor);
 		whoisEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
 
-		whoisEditorPanelFrame.addTab("Tree View", null, whoisTreePane, null);
+		whoisEditorPanelFrame.addTab(lang.getMessage("lang.tree-view"), null, whoisTreePane, null);
 		whoisTreePane.setLayout(new GridLayout(0, 1, 0, 0));
 
 		whoisTreePane.add(whoisTreeview);
@@ -460,11 +502,11 @@ public class GUI extends JFrame {
 		whoisSearchPanel.setLayout(gl_whoisSearchPanel);
 		whoIsPanel.setLayout(gl_whoIsPanel);
 
-		tabbedPane.addTab("DNS Lookup", null, dnslookupPanel, null);
+		tabbedPane.addTab(lang.getMessage("lang.tabs.dns-lookup"), null, dnslookupPanel, null);
 
-		dnslookupSearchPanel.setToolTipText("You can search ip's and domain names");
+		dnslookupSearchPanel.setToolTipText(lang.getMessage("lang.tooltips.whois-address"));
 		dnslookupSearchPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-				"Search DNS Records", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+				lang.getMessage("lang.layer-panel.search-dns"), TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		dnsSearchField = new JTextField();
 		dnsSearchField.setColumns(10);
@@ -487,7 +529,7 @@ public class GUI extends JFrame {
 						.addGap(6)));
 		dnslookupSearchPanel.setLayout(gl_dnslookupSearchPanel);
 
-		dnsEditorPanel.setBorder(new TitledBorder(null, "Editor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		dnsEditorPanel.setBorder(new TitledBorder(null, lang.getMessage("lang.editor"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		dnsEditorPanel.setLayout(new GridLayout(1, 0, 0, 0));
 		gl_dnslookupPanel.setHorizontalGroup(gl_dnslookupPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_dnslookupPanel.createSequentialGroup().addContainerGap()
@@ -503,7 +545,7 @@ public class GUI extends JFrame {
 
 		dnsEditorPanel.add(dnsEditorPanelFrame);
 
-		dnsEditorPanelFrame.addTab("Editor", null, panel_4, null);
+		dnsEditorPanelFrame.addTab(lang.getMessage("lang.editor"), null, panel_4, null);
 		panel_4.setLayout(new GridLayout(0, 1, 0, 0));
 
 		panel_4.add(scrollPane_3);
@@ -511,19 +553,19 @@ public class GUI extends JFrame {
 		dnsEditor.setFont(new Font("Consolas", Font.PLAIN, 22));
 		scrollPane_3.setViewportView(dnsEditor);
 
-		dnsEditorPanelFrame.addTab("Tree View", null, dnsTreePanel, null);
+		dnsEditorPanelFrame.addTab(lang.getMessage("lang.tree-view"), null, dnsTreePanel, null);
 		dnsTreePanel.setLayout(new GridLayout(0, 1, 0, 0));
 		dnslookupPanel.setLayout(gl_dnslookupPanel);
 
 		dnsTreePanel.add(dnsTreeview);
 
-		tabbedPane.addTab("Converter", null, converterPanel, "Here you can convert ip to domain and domain to ip");
+		tabbedPane.addTab(lang.getMessage("lang.tabs.converter"), null, converterPanel, lang.getMessage("lang.tooltips.converter"));
 
 		converterDTIPPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-				"Domain to IP converter", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+				lang.getMessage("lang.layer-panel.dtip"), TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		converterIPTDPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-				"IP to Domain coverter", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+				lang.getMessage("lang.layer-panel.iptd"), TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		iptdIpField = new JTextField();
 		iptdIpField.setColumns(10);
@@ -588,12 +630,12 @@ public class GUI extends JFrame {
 		converterDTIPPanel.setLayout(gl_converterDTIPPanel);
 		converterPanel.setLayout(gl_converterPanel);
 
-		tabbedPane.addTab("IP Scanner", null, ipscannerPanel, null);
+		tabbedPane.addTab(lang.getMessage("lang.tabs.ip-scanner"), null, ipscannerPanel, null);
 
-		ipscanPorts.setBorder(new TitledBorder(null, "Port range", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
+		ipscanPorts.setBorder(new TitledBorder(null, lang.getMessage("lang.layer-panel.port-range"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		
 		ipscanControl
-				.setBorder(new TitledBorder(null, "Control Panel", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+				.setBorder(new TitledBorder(null, lang.getMessage("lang.layer-panel.control-panel"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		ipscanLogPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
 
@@ -699,7 +741,7 @@ public class GUI extends JFrame {
 		ipscanPorts.setLayout(gl_ipscanPorts);
 		ipscannerPanel.setLayout(gl_ipscannerPanel);
 
-		tabbedPane.addTab("About", null, aboutPanel, null);
+		tabbedPane.addTab(lang.getMessage("lang.tabs.about"), null, aboutPanel, null);
 		aboutPanel.setLayout(new BorderLayout(0, 0));
 
 		aboutLabel.setAlignment(Label.CENTER);
@@ -719,50 +761,25 @@ public class GUI extends JFrame {
 		txtrIpTools.setText(
 				"IP Tools.\r\nVersion Beta 1.2\r\nGreat program to check usefull information of ip and it's domain. You can check ports, os information and dns records of domain with it. You can also test penerate ip's.\r\nEducation purposes only. I take no responsibility for any abuse or wrong use.\r\nThere is still plenty of features that are not avaible yet, but they will be soon!\r\nMade by videosambo\r\nMIT licensed");
 
-		tabbedPane.addTab("Settings", null, settingsPanel, null);
+		tabbedPane.addTab(lang.getMessage("lang.tabs.settings"), null, settingsPanel, null);
 
-		settingsLanguagePanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Languages",
+		settingsLanguagePanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), lang.getMessage("lang.languages"),
 				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		settingsPacketSettingsPanel.setBorder(
-				new TitledBorder(null, "PacketSettings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+				new TitledBorder(null, lang.getMessage("lang.layer-panel.packet-settings"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-		settingsThemesPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Themes",
+		settingsThemesPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), lang.getMessage("lang.themes"),
 				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 
 		settingsAPIPanel
-				.setBorder(new TitledBorder(null, "API Key", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-
-		gl_settingsPanel.setHorizontalGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_settingsPanel.createSequentialGroup().addContainerGap()
-						.addGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
-								.addComponent(settingsPacketSettingsPanel, GroupLayout.PREFERRED_SIZE, 168,
-										GroupLayout.PREFERRED_SIZE)
-								.addGroup(gl_settingsPanel.createSequentialGroup()
-										.addComponent(settingsLanguagePanel, GroupLayout.PREFERRED_SIZE, 168,
-												GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(ComponentPlacement.UNRELATED)
-										.addComponent(settingsThemesPanel, GroupLayout.PREFERRED_SIZE, 182,
-												GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(ComponentPlacement.RELATED).addComponent(settingsAPIPanel,
-												GroupLayout.DEFAULT_SIZE, 250, Short.MAX_VALUE)))
-						.addContainerGap()));
-		gl_settingsPanel.setVerticalGroup(gl_settingsPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_settingsPanel.createSequentialGroup().addContainerGap()
-						.addGroup(gl_settingsPanel.createParallelGroup(Alignment.TRAILING, false)
-								.addComponent(settingsAPIPanel, Alignment.LEADING)
-								.addComponent(settingsLanguagePanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 105,
-										Short.MAX_VALUE)
-								.addComponent(settingsThemesPanel, Alignment.LEADING))
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(settingsPacketSettingsPanel, GroupLayout.DEFAULT_SIZE, 246, Short.MAX_VALUE)
-						.addContainerGap()));
+				.setBorder(new TitledBorder(null, lang.getMessage("lang.layer-panel.api-key"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		logConsole("Using APIKEY '" + settingsWHOISApiKey.getText() + "'");
-		settingsWHOISApiKey.setToolTipText("Enter whois api key here if you want to use whois and dns lookput");
+		settingsWHOISApiKey.setToolTipText(lang.getMessage("lang.tooltips.apikey"));
 		settingsWHOISApiKey.setColumns(10);
 
-		lblWhoisApiKey.setToolTipText("My api key can run out of uses so you can enter your own");
+		lblWhoisApiKey.setToolTipText(lang.getMessage("lang.tooltips.apikey-label"));
 		gl_settingsAPIPanel
 				.setHorizontalGroup(
 						gl_settingsAPIPanel.createParallelGroup(Alignment.LEADING)
@@ -840,6 +857,20 @@ public class GUI extends JFrame {
 		/*
 		 * Events
 		 */
+		
+		
+		btnSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+//				try {
+//					FileInputStream fis = new FileInputStream(settingsFile);
+//					BufferedReader in = new BufferedReader(new InputStreamReader(fis));
+//					String input = in.readLine(); in.close();
+//					String[] settings = input.split("::");
+//				} catch (IOException er) {
+//					er.printStackTrace();
+//				}
+			}
+		});
 
 		booterSTOP.addActionListener(new ActionListener() {
 
@@ -850,7 +881,7 @@ public class GUI extends JFrame {
 				booterProgbar.setStringPainted(false);
 				booterProgbar.setValue(0);
 				booterProgbar.setMaximum(100);
-				logConsole("Booter stopped!");
+				logConsole(lang.getMessage("lang.console-log.booter-stopped"));
 			}
 		});
 
@@ -862,9 +893,9 @@ public class GUI extends JFrame {
 						+ booterPacketCount.getValue() + "::" + packetContent.getText();
 				JFileChooser chooser = new JFileChooser();
 				chooser.setDialogTitle("Specify a file to save");
-				chooser.setApproveButtonText("Save");
+				chooser.setApproveButtonText(lang.getMessage("lang.save"));
 				chooser.setFileFilter(new FileNameExtensionFilter("Text Document", "txt"));
-				int selected = chooser.showSaveDialog(new JFrame("Save file"));
+				int selected = chooser.showSaveDialog(new JFrame(lang.getMessage("lang.save-file")));
 				if (selected == JFileChooser.APPROVE_OPTION) {
 					try {
 						FileWriter fw;
@@ -889,8 +920,8 @@ public class GUI extends JFrame {
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("Text Document", "txt", "text");
 				chooser.setFileFilter(filter);
 				chooser.setDialogTitle("Specify a file to load");
-				chooser.setApproveButtonText("Load");
-				int selected = chooser.showOpenDialog(new JFrame("Load file"));
+				chooser.setApproveButtonText(lang.getMessage("lang.load"));
+				int selected = chooser.showOpenDialog(new JFrame(lang.getMessage("lang.load-file")));
 				if (selected == JFileChooser.APPROVE_OPTION) {
 					File selectedFile = chooser.getSelectedFile();
 					if (selectedFile.canRead()) {
@@ -908,11 +939,11 @@ public class GUI extends JFrame {
 							}
 						} catch (IOException e1) {
 							e1.printStackTrace();
-							logConsole("ERROR: Cannot read file!");
+							logConsole(lang.getMessage("lang.console-log.error.cannot-read-file"));
 							return;
 						}
 					} else {
-						logConsole("ERROR: Cannot read file!");
+						logConsole(lang.getMessage("lang.console-log.error.cannot-read-file"));
 						return;
 					}
 				}
@@ -939,16 +970,16 @@ public class GUI extends JFrame {
 		});
 
 		dnsSearchButton.addActionListener(new ActionListener() {
-
+//lang.getMessage("lang.")
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				logConsole("Starting searching dns information of " + dnsSearchField.getText());
+				logConsole(lang.getMessage("lang.console-log.searching-dns").replaceAll("%1", dnsSearchField.getText()));
 				dnsEditor.setEditorKitForContentType("text/xml", new XmlEditorKit());
 				dnsEditor.setContentType("text/xml");
 				dnsEditor.setText(dnsdata.getXMLContentAsString(dnsSearchField.getText()));
 				xmlToTree = new XmlToTree(dnsdata.getXMLContentAsDocument(dnsSearchField.getText()));
 				if (xmlToTree.show() == null) {
-					logConsole("ERROR: Tree not defined!");
+					logConsole(lang.getMessage("lang.console-log.error.tree-not-defined"));
 					return;
 				}
 				JTree dnsXMLTree = xmlToTree.show();
@@ -957,7 +988,7 @@ public class GUI extends JFrame {
 				xmlToTree.expandAllNodes();
 				dnsXMLTree = xmlToTree.show();
 				dnsTreePanel.add(dnsTreeview);
-				logConsole("Searching completed!");
+				logConsole(lang.getMessage("lang.console-log.search-complete"));
 			}
 		});
 
@@ -969,26 +1000,26 @@ public class GUI extends JFrame {
 				int port = Integer.parseInt(booterPortField.getText());
 				int packetCount = booterSlider.getValue();
 				if (content.isEmpty() || content == null) {
-					logConsole("ERROR: Packet content is empty");
+					logConsole(lang.getMessage("lang.console-log.error.empty-packet"));
 					return;
 				}
 				if (address.isEmpty() || address == null) {
-					logConsole("ERROR: Address field is empty");
+					logConsole(lang.getMessage("lang.console-log.error.empty-address-field"));
 					return;
 				}
 				if (port == 0) {
-					logConsole("ERROR: Port cannot be 0");
+					logConsole(lang.getMessage("lang.console-log.error.zero-port"));
 					return;
 				}
 				if (packetCount == 0) {
-					logConsole("ERROR: Packet count cannot be 0");
+					logConsole(lang.getMessage("lang.console-log.error.zero-packet"));
 					return;
 				}
 				booterRunning = true;
 				if (radioTCP.isSelected()) {
 					tcpSender = new TCPPacketSender(address, port);
 					if (packetCount == -1) {
-						logConsole("Sending TCP packets!");
+						logConsole(lang.getMessage("lang.console-log.loop-tcp"));
 						new Thread(new Runnable() {
 
 							@Override
@@ -1001,7 +1032,7 @@ public class GUI extends JFrame {
 						}).start();
 					} else {
 						tcpSender = new TCPPacketSender(address, port);
-						logConsole("Starting sending TCP packets...");
+						logConsole(lang.getMessage("lang.console-log.sending-tcp"));
 						new Thread(new Runnable() {
 							@Override
 							public void run() {
@@ -1015,14 +1046,14 @@ public class GUI extends JFrame {
 								}
 								booterProgbar.setStringPainted(false);
 								tcpSender.closeSocket();
-								logConsole("All TCP packets sended!");
+								logConsole(lang.getMessage("lang.console-log.tcp-done"));
 							}
 						}).start();
 					}
 				} else if (radioUDP.isSelected()) {
 					udpSender = new UDPPacketSender(address, port);
 					if (packetCount == -1) {
-						logConsole("Sending UDP packets!");
+						logConsole(lang.getMessage("lang.console-log.loop-udp"));
 						new Thread(new Runnable() {
 
 							@Override
@@ -1035,7 +1066,7 @@ public class GUI extends JFrame {
 						}).start();
 					} else {
 						udpSender = new UDPPacketSender(address, port);
-						logConsole("Starting sending UDP packets...");
+						logConsole(lang.getMessage("lang.console-log.sending-udp"));
 						new Thread(new Runnable() {
 							@Override
 							public void run() {
@@ -1049,12 +1080,12 @@ public class GUI extends JFrame {
 								}
 								booterProgbar.setStringPainted(false);
 								udpSender.closeSocket();
-								logConsole("All UDP packets sended!");
+								logConsole(lang.getMessage("lang.console-log.udp-done"));
 							}
 						}).start();
 					}
 				} else {
-					logConsole("ERROR: Invalid state");
+					logConsole(lang.getMessage("lang.console-log.error.invalid-state"));
 				}
 			}
 		});
@@ -1063,13 +1094,13 @@ public class GUI extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				logConsole("Searching domain/ip information of " + whoisSearchField.getText());
+				logConsole(lang.getMessage("lang.console-log.searching-whois").replaceAll("%1", whoisSearchField.getText()));
 				whoisEditor.setEditorKitForContentType("text/xml", new XmlEditorKit());
 				whoisEditor.setContentType("text/xml");
 				whoisEditor.setText(xmldata.getXMLContentAsString(whoisSearchField.getText()));
 				xmlToTree = new XmlToTree(xmldata.getXMLContentAsDocument(whoisSearchField.getText()));
 				if (xmlToTree.show() == null) {
-					logConsole("ERROR: Tree not defined!");
+					logConsole(lang.getMessage("lang.console-log.error.tree-not-defined"));
 					return;
 				}
 				JTree whoisXMLTree = xmlToTree.show();
@@ -1077,7 +1108,7 @@ public class GUI extends JFrame {
 				whoisXMLTree.setVisible(true);
 				xmlToTree.expandAllNodes();
 				whoisXMLTree = xmlToTree.show();
-				logConsole("Searching completed!");
+				logConsole(lang.getMessage("lang.console-log.search-complete"));
 			}
 		});
 
@@ -1086,11 +1117,11 @@ public class GUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (iptdIpField.getText().isEmpty()) {
-					logConsole("ERROR: IP Field is empty!");
+					logConsole(lang.getMessage("lang.console-log.error.empty-ip"));
 					return;
 				}
 				iptdDomainFIeld.setText(coverter.getDomain(iptdIpField.getText()));
-				logConsole("Converted " + iptdIpField.getText() + " to " + coverter.getDomain(iptdIpField.getText()));
+				logConsole(lang.getMessage("lang.console-log.convert").replaceAll("%1", iptdIpField.getText()).replaceAll("%2", coverter.getDomain(iptdIpField.getText())));
 			}
 		});
 
@@ -1099,12 +1130,11 @@ public class GUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (dtipDomainField.getText().isEmpty()) {
-					logConsole("ERROR: Domain field is empty!");
+					logConsole(lang.getMessage("lang.console-log.error.empty-domain"));
 					return;
 				}
 				dtipIpField.setText(coverter.getIP(dtipDomainField.getText()));
-				logConsole(
-						"Converted " + dtipDomainField.getText() + " to " + coverter.getIP(dtipDomainField.getText()));
+				logConsole(lang.getMessage("lang.console-log.convert").replaceAll("%1", dtipDomainField.getText()).replaceAll("%2", coverter.getIP(dtipDomainField.getText())));
 			}
 		});
 
@@ -1120,19 +1150,19 @@ public class GUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (ipscanAddress.getText().isEmpty() || ipscanAddress.getText() == null) {
-					logConsole("ERROR: IP address not defined!");
+					logConsole(lang.getMessage("lang.console-log.error.empty-ip"));
 					return;
 				}
 				if ((int) ipscanPort1.getValue() == 0 || (int) ipscanPort2.getValue() == 0) {
-					logConsole("ERROR: Port cannot be 0");
+					logConsole(lang.getMessage("lang.console-log.error.zero-port"));
 					return;
 				}
 				if ((int) ipscanPort1.getValue() > (int) ipscanPort2.getValue()) {
-					logConsole("ERROR: Port range cannot be negative!");
+					logConsole(lang.getMessage("lang.console-log.error.negative-range"));
 					return;
-				}
-				ipscanLog.setText(ipscanLog.getText() + "Startig scanning" + ipscanAddress.getText() + "\n");
-				logConsole("Startig scanning" + ipscanAddress.getText());
+				}//lang.getMessage("lang.")
+				ipscanLog.setText(ipscanLog.getText() + lang.getMessage("lang.console-log.scanning").replaceAll("%1", ipscanAddress.getText()) + "\n");
+				logConsole(lang.getMessage("lang.console-log.scanning").replaceAll("%1", ipscanAddress.getText()));
 				if (ipscanOpenPort.isSelected()) {
 					if ((int) ipscanPort1.getValue() == (int) ipscanPort2.getValue()) {
 						ipscanProgbar.setIndeterminate(true);
@@ -1141,7 +1171,7 @@ public class GUI extends JFrame {
 						ipscanProgbar.setIndeterminate(false);
 						scan.closeSocket();
 					} else {
-						ipscanLog.setText(ipscanLog.getText() + "Startig scanning" + ipscanAddress.getText() + "\n");
+						ipscanLog.setText(ipscanLog.getText() + lang.getMessage("lang.console-log.scanning").replaceAll("%1", ipscanAddress.getText()) + "\n");
 						new Thread(new Runnable() {
 							@Override
 							public void run() {
@@ -1165,8 +1195,8 @@ public class GUI extends JFrame {
 						}).start();
 					}
 				}
-				logConsole("Scan completed!");
-				ipscanLog.setText(ipscanLog.getText() + "Scan completed!\n\n");
+				logConsole(lang.getMessage("lang.console-log.scan-completed"));
+				ipscanLog.setText(ipscanLog.getText() + lang.getMessage("lang.console-log.scan-completed")+"\n\n");
 			}
 		});
 
@@ -1174,12 +1204,23 @@ public class GUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				xmldata.setAPIKEY(settingsWHOISApiKey.getText());
 				dnsdata.setAPIKEY(settingsWHOISApiKey.getText());
-				logConsole("Using APIKEY '" + settingsWHOISApiKey.getText() + "'");
+				logConsole(lang.getMessage("lang.console-log.use-apikey").replaceAll("%1", settingsWHOISApiKey.getText()));
 			}
 		});
 
-		logConsole("IP Tools Started!");
+		logConsole(lang.getMessage("lang.iptools-started"));
 	}
+
+	public void logConsole(String msg) {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
+		LocalDateTime now = LocalDateTime.now();
+		String time = "[" + dtf.format(now) + "] ";
+		consoleLog.setText(consoleLog.getText() + "\n" + time + msg);
+	}
+	
+	/*
+	 * Getters and Setters
+	 */
 
 	public static String getSettingsWHOISApiKey() {
 		if (settingsWHOISApiKey != null) {
@@ -1192,6 +1233,7 @@ public class GUI extends JFrame {
 	}
 
 	private static void addPopup(Component component, final JPopupMenu popup) {
+		
 	}
 
 	public JTextField getBooterAddressField() {
@@ -1208,12 +1250,5 @@ public class GUI extends JFrame {
 
 	public GUI getInstance() {
 		return this;
-	}
-
-	public void logConsole(String msg) {
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
-		LocalDateTime now = LocalDateTime.now();
-		String time = "[" + dtf.format(now) + "] ";
-		consoleLog.setText(consoleLog.getText() + "\n" + time + msg);
 	}
 }
