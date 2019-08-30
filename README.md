@@ -1,4 +1,4 @@
-[!(https://img.shields.io/apm/l/vim-mode)](https://www.google.com)
+![https://img.shields.io/apm/l/vim-mode](https://www.google.com)
 
 # IpTools
 Tool to check info of ip or domain. Provides peneration tester. Education purposes only. Coded with Java.
